@@ -1,0 +1,60 @@
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 100svh;
+  padding-top: calc(var(--nav-height) + var(--space-6));
+  padding-bottom: var(--space-6);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/*
+  Lifts the text above the scene layer while keeping the site gutter.
+
+  pointer-events: none is load bearing, not a nicety. This element is a flex
+  child that spans the full container width, so although the terminal and battery
+  only occupy the left column, the empty right hand part of the shell still sat
+  on top of the artwork and swallowed every click aimed at her: a real pointer
+  click hit this div instead of the scene button underneath. The children below
+  opt back in, which leaves the terminal interactive and everything else
+  clickable.
+*/
+.shell {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/*
+  Capped and pinned left, so the terminal sits in the empty half of the room
+  and never covers her.
+*/
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: min(560px, 100%);
+}
+
+/*
+  The terminal and the battery are the only things in the hero that should stop a
+  click reaching the scene. Everything else in the shell stays transparent to the
+  pointer.
+*/
+.content > * {
+  pointer-events: auto;
+}
+
+@media (max-width: 999px) {
+  .hero {
+    /* Stacked layout: the art takes the top, the text sits along the bottom. */
+    align-items: flex-end;
+  }
+
+  .content {
+    max-width: 100%;
+  }
+}

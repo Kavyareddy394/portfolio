@@ -1,0 +1,206 @@
+/*
+  Anchored to the artwork, not the viewport.
+
+  This sits inside .artboard, so the percentages resolve against the 16:9 picture
+  exactly like the z letters do. That matters because the artboard is cropped on
+  wide screens and zoomed 1.55x on narrow ones: a bubble positioned in viewport
+  units would drift away from her head on one shape or another.
+*/
+.layer {
+  position: absolute;
+  /* Above the frame stack, the loading overlay (3) and the tint (4). */
+  z-index: 6;
+  width: 0;
+  height: 0;
+  /* Never intercepts a click aimed at her. */
+  pointer-events: none;
+}
+
+.bubble {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  /* translate(-50%, -100%) lifts the whole bubble above the anchor point. */
+  translate: -50% -100%;
+  width: max-content;
+  /*
+    The cap cannot be a percentage: the containing block is .layer, which is a
+    zero sized anchor point, so a percentage max width resolves against zero and
+    collapses the bubble to a single word. Container units resolve against .scene
+    instead, and ch keeps the line length readable on any screen.
+  */
+  max-width: min(30ch, var(--max-width));
+  margin: 0;
+  padding: 0.6em 0.95em;
+  border: 1px solid var(--warm-soft);
+  border-radius: var(--radius-md);
+  background: rgba(9, 11, 18, 0.82);
+  backdrop-filter: blur(8px);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 1.6cqw, 1.1rem);
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 18px 40px -18px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    /* Warm bloom, so the bubble reads as lamplight in the same room as the art
+       rather than a piece of UI dropped on top of it. */
+    0 0 30px -8px rgba(255, 176, 106, 0.4);
+
+  /* Pops in rather than sliding: she is being woken, not scrolled to. */
+  animation: pop var(--enter) var(--ease-out) both;
+}
+
+/*
+  The bubble sits on the side of the anchor the tail points away from, so the tip
+  always lands on the anchor itself, which sits on her head.
+*/
+.bubble[data-tail="up"] {
+  bottom: auto;
+  top: 0;
+  translate: -50% 0;
+}
+
+.bubble[data-tail="left"] {
+  bottom: auto;
+  top: 0;
+  translate: -100% -50%;
+}
+
+.bubble[data-tail="right"] {
+  bottom: auto;
+  top: 0;
+  translate: 0 -50%;
+}
+
+/*
+  The tail is a square rotated 45 degrees, so it picks up the same border colour
+  as the bubble without needing an outline of its own. Which two of its four
+  borders are kept decides which way the corner points: top+left points up,
+  top+right points right, bottom+right points down, bottom+left points left.
+*/
+.tail {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0.7em;
+  height: 0.7em;
+  translate: -50% 40%;
+  rotate: 45deg;
+  border-right: 1px solid var(--warm-soft);
+  border-bottom: 1px solid var(--warm-soft);
+  background: rgba(9, 11, 18, 0.82);
+  animation: pop var(--enter) var(--ease-out) both;
+}
+
+.tail[data-tail="up"] {
+  bottom: auto;
+  top: 0;
+  translate: -50% -40%;
+  border: 0;
+  border-top: 1px solid var(--warm-soft);
+  border-left: 1px solid var(--warm-soft);
+}
+
+.tail[data-tail="left"] {
+  bottom: auto;
+  top: 0;
+  translate: -40% -50%;
+  border: 0;
+  border-bottom: 1px solid var(--warm-soft);
+  border-left: 1px solid var(--warm-soft);
+}
+
+.tail[data-tail="right"] {
+  bottom: auto;
+  top: 0;
+  translate: 40% -50%;
+  border: 0;
+  border-top: 1px solid var(--warm-soft);
+  border-right: 1px solid var(--warm-soft);
+}
+
+/*
+  Two layers in one grid cell: the ghost holds the finished line, the typed layer
+  overlays it clipped to whatever has been revealed. Because the ghost is there
+  from the first keystroke the bubble is laid out once and never resizes, so the
+  text does not reflow under her while she is talking.
+*/
+.text {
+  display: grid;
+  min-height: 1.35em;
+}
+
+.ghost {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+
+.typed {
+  grid-area: 1 / 1;
+}
+
+.revealed {
+  position: relative;
+}
+
+/*
+  Only blinks while there are still characters left to type.
+
+  The caret hangs off the end of the revealed run rather than sitting inline
+  after it. Inline it would add its own width to the line, and the bubble would
+  grow by a few pixels on whichever character happened to cross the cap.
+*/
+.caret {
+  position: absolute;
+  left: 100%;
+  top: 0.08em;
+  width: 2px;
+  height: 0.95em;
+  translate: 0 0.15em;
+  background: var(--accent);
+  opacity: 0;
+}
+
+.bubble[data-typing="true"] .caret {
+  animation: blink 900ms steps(2, start) infinite;
+}
+
+@keyframes pop {
+  0% {
+    opacity: 0;
+    scale: 0.86;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/*
+  Reduced motion: the controller also types the whole line instantly, so the
+  bubble just needs to stop moving and blinking.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .bubble,
+  .tail {
+    animation: none;
+  }
+
+  .caret {
+    animation: none !important;
+    opacity: 0;
+  }
+}

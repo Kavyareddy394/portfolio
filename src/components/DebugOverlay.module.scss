@@ -1,0 +1,75 @@
+.overlay {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: min(260px, calc(100% - var(--space-8)));
+  padding: var(--space-4);
+  border: 1px solid rgba(255, 196, 87, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(10, 8, 4, 0.92);
+  box-shadow: var(--shadow-md);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #ffd479;
+}
+
+.title {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 212, 121, 0.65);
+}
+
+.stats {
+  display: grid;
+  gap: 2px;
+}
+
+.stats > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.stats dt {
+  opacity: 0.6;
+}
+
+.stats dd {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.missing {
+  padding-top: var(--space-2);
+  border-top: 1px solid rgba(255, 196, 87, 0.25);
+  color: #ff9f6b;
+  word-break: break-all;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.buttons button {
+  padding: 0.25rem 0.55rem;
+  border: 1px solid rgba(255, 196, 87, 0.35);
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.buttons button:hover {
+  background: rgba(255, 196, 87, 0.14);
+}

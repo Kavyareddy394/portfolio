@@ -1,0 +1,40 @@
+.layer {
+  position: absolute;
+  /* Above the tint (4) so the letters stay as bright as they were before the
+     loading overlay and the tint were given explicit stacking order. */
+  z-index: 5;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.letter {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-family: var(--font-display);
+  font-size: var(--size);
+  font-weight: 600;
+  line-height: 1;
+  color: rgba(238, 241, 248, 0.75);
+  text-shadow: 0 0 12px rgba(109, 140, 255, 0.5);
+  opacity: 0;
+  animation: float var(--cycle) var(--ease-in-out) var(--delay) infinite;
+}
+
+@keyframes float {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.7);
+  }
+  18% {
+    opacity: 0.9;
+  }
+  70% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0.7em, -4.5em, 0) scale(1.15);
+  }
+}

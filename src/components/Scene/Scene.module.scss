@@ -1,0 +1,177 @@
+/*
+  The scene is the page background: it fills the whole hero, edge to edge.
+  container-type: size lets .artboard do the cover maths in real pixels below.
+*/
+.scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  container-type: size;
+}
+
+/*
+  The artboard keeps the artwork's 16:9 shape and is sized to COVER the scene,
+  centred. Sizing the artboard rather than the images is what lets the z letters
+  and the hotspot keep using artwork percentages on any screen: a percent of the
+  artboard is always the same percent of the picture, with the overflow cropped
+  evenly instead of the artwork being squashed.
+*/
+.artboard {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: max(100cqw, calc(100cqh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/*
+  Narrow screens: a 16:9 picture only shows about a quarter of its own width on
+  a portrait phone, which is less than she is wide, so a centred cover crops her
+  out of shot entirely. Zoom in and pan up instead, which parks her head in the
+  clear space above the terminal.
+
+  The zoom and the pan are one solution to two constraints that nearly collide on
+  a short phone: the pan cannot go much further up without uncovering the bottom
+  edge, and it cannot go less far without her head hiding behind the text. 1.55
+  and -67% is the pair that satisfies both down to a 360x640 screen, leaving
+  roughly 10px of slack at the bottom. Relax either one alone and re-run the
+  framing check before changing the other.
+*/
+@media (max-width: 999px) {
+  .artboard {
+    width: calc(max(100cqw, 100cqh * 16 / 9) * 1.55);
+    translate: -70% -67%;
+  }
+}
+
+/* Frames ----------------------------------------------------------------- */
+
+.frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity var(--fade, 400ms) var(--ease-out);
+}
+
+/* The incoming pose fades up, on top of whatever it replaces. */
+.frame[data-active="true"] {
+  opacity: 1;
+  z-index: 2;
+}
+
+/*
+  The pose being replaced stays fully opaque underneath and is dropped once the
+  fade is done. Both layers fading at once is what caused the black flash: over
+  a near black backdrop two half transparent images composite to less light than
+  either one alone.
+*/
+.frame[data-leaving="true"] {
+  opacity: 1;
+  z-index: 1;
+  transition: none;
+}
+
+/* Until preload finishes we sit on bg_desk only. */
+.scene[data-ready="false"] .frame:not([data-active="true"]) {
+  transition: none;
+}
+
+.frame[data-missing="true"] {
+  /* A file that 404s must never sit on top as a broken image. */
+  visibility: hidden;
+}
+
+/*
+  Two tints: a cool glow around her and a scrim behind the text on the left, so
+  the artwork reads as a background without fighting the terminal for contrast.
+
+  z-index 4 keeps the scrim above the frame stack, which tops out at 2, and below
+  the speech bubble at 6.
+*/
+.tint {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 68% 42%,
+      rgba(109, 140, 255, 0.1),
+      transparent 70%
+    ),
+    linear-gradient(
+      to right,
+      rgba(6, 7, 11, 0.82),
+      rgba(6, 7, 11, 0.45) 42%,
+      rgba(6, 7, 11, 0.1) 72%,
+      transparent
+    ),
+    linear-gradient(to top, rgba(6, 7, 11, 0.5), transparent 45%);
+}
+
+/* Debug ----------------------------------------------------------------- */
+
+/*
+  Where the speech bubble is pinned. Drawn only under ?debug=1, so the placement
+  can be checked against the artwork and corrected in config/dialogue.ts.
+*/
+.anchorDebug {
+  position: absolute;
+  z-index: 8;
+  width: 1.4cqw;
+  height: 1.4cqw;
+  min-width: 6px;
+  min-height: 6px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: rgba(126, 231, 135, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.7),
+    0 0 12px rgba(126, 231, 135, 0.9);
+}
+
+/* Click target ----------------------------------------------------------- */
+
+.stage,
+.hotspot {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  /* Above everything decorative, including the bubble. */
+  z-index: 7;
+}
+
+.stage {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hotspot {
+  border-radius: var(--radius-md);
+}
+
+.stage:hover,
+.hotspot:hover {
+  box-shadow: inset 0 0 0 1px rgba(109, 140, 255, 0.35);
+}
+
+.stage:focus-visible,
+.hotspot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
