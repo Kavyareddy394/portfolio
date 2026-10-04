@@ -1,96 +1,71 @@
 "use client";
 
 import styles from "./Battery.module.scss";
-import { batteryTone, sceneConfig } from "@/config/scene";
+import { sceneConfig } from "@/config/scene";
 
 type BatteryProps = {
   percent: number;
   phaseLabel: string;
   charging: boolean;
-  /** Phase 3: the bar is falling, so it is coloured and captioned differently. */
-  discharging: boolean;
   paused: boolean;
 };
 
-export function Battery({
-  percent,
-  phaseLabel,
-  charging,
-  discharging,
-  paused,
-}: BatteryProps) {
-  const { battery, labels } = sceneConfig;
+export function Battery({ percent, phaseLabel, charging, paused }: BatteryProps) {
+  const { battery } = sceneConfig;
   const clamped = Math.max(0, Math.min(percent, battery.fullPercent));
-  const fill = (clamped / battery.fullPercent) * 100;
+  const at = (value: number) => (value / battery.fullPercent) * 100;
 
-  /*
-    Green, amber, red, but only while it drains. Left on all the time it would
-    paint the sleeping phases red, which is where she spends the first two
-    minutes of every cycle.
-  */
-  const tone = discharging ? batteryTone(clamped) : null;
-
-  // Every phase change gets a tick on the track, so the three phases read as
-  // three parts of one charge rather than one long bar.
+  // Every phase change gets a tick on the track, so the phases read as parts of
+  // one charge rather than one long bar.
   const markers = [
     battery.deepSleepEndsAt,
     battery.lightSleepEndsAt,
     battery.finaleAtPercent,
   ].filter((value) => value > 0 && value < battery.fullPercent);
 
-  const caption = paused
-    ? labels.battery.paused
-    : discharging
-      ? labels.battery.draining
-      : charging
-        ? labels.battery.charging
-        : labels.battery.idle;
+  /*
+    The bar carries the number and nothing else.
+
+    The phase name and a sentence about it used to live here, which made the
+    panel a paragraph about deep sleep rather than a gauge. The terminal already
+    reports the mode on its own status line, so it was the same fact twice, and
+    in the vertical orientation it is a strip about 56px wide with no room for a
+    sentence anyway.
+
+    The phase name stays in the accessible name, where it costs no space and a
+    screen reader still gets it.
+  */
+  const state = paused ? "paused" : charging ? "charging" : "draining";
 
   return (
-    <div
-      className={styles.battery}
-      data-charging={charging}
-      data-tone={tone ?? undefined}
-    >
-      <div className={styles.head}>
-        <span className={styles.label}>
-          {phaseLabel}
-          {charging ? (
-            <span className={styles.bolt} aria-hidden="true">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
-              </svg>
-            </span>
-          ) : null}
-        </span>
-
-        <span className={styles.percent}>
-          {Math.round(clamped)}
-          <span className={styles.unit}>%</span>
-        </span>
-      </div>
+    <div className={styles.battery} data-charging={charging}>
+      <span className={styles.percent}>
+        {Math.round(clamped)}
+        <span className={styles.unit}>%</span>
+      </span>
 
       <div
         className={styles.track}
         role="progressbar"
-        aria-label={`Battery ${Math.round(clamped)} percent, ${phaseLabel}`}
+        aria-label={`Battery ${Math.round(clamped)} percent, ${phaseLabel}, ${state}`}
         aria-valuemin={0}
         aria-valuemax={battery.fullPercent}
         aria-valuenow={Math.round(clamped)}
       >
-        <span className={styles.fill} style={{ width: `${fill}%` }} />
+        <span
+          className={styles.fill}
+          style={{ "--at": `${at(clamped)}%` } as React.CSSProperties}
+        />
 
         {markers.map((value) => (
           <span
             key={value}
             className={styles.marker}
-            style={{ left: `${(value / battery.fullPercent) * 100}%` }}
+            style={{ "--at": `${at(value)}%` } as React.CSSProperties}
             aria-hidden="true"
           />
         ))}
       </div>
-
-      <p className={styles.caption}>{caption}</p>
     </div>
   );
 }

@@ -2,9 +2,9 @@
   Anchored to the artwork, not the viewport.
 
   This sits inside .artboard, so the percentages resolve against the 16:9 picture
-  exactly like the z letters do. That matters because the artboard is cropped on
-  wide screens and zoomed 1.55x on narrow ones: a bubble positioned in viewport
-  units would drift away from her head on one shape or another.
+  exactly like the z letters do. That matters because the artboard is cropped to
+  a different band of the picture on every screen shape: a bubble positioned in
+  viewport units would drift away from her head on one shape or another.
 */
 .layer {
   position: absolute;
@@ -19,9 +19,15 @@
 .bubble {
   position: absolute;
   left: 0;
+  /*
+    bottom: 0 puts the bubble's bottom edge on the anchor, and translate(-50%, 0)
+    only centres it horizontally. The vertical half used to be -100% as well,
+    which lifted it by a second full height: the bubble ended up one whole bubble
+    above the anchor instead of sitting on it, floating in the empty top third of
+    the picture. That double lift is what read as "too high".
+  */
   bottom: 0;
-  /* translate(-50%, -100%) lifts the whole bubble above the anchor point. */
-  translate: -50% -100%;
+  translate: -50% 0;
   width: max-content;
   /*
     The cap cannot be a percentage: the containing block is .layer, which is a
@@ -38,7 +44,19 @@
   backdrop-filter: blur(8px);
   color: var(--text);
   font-family: var(--font-display);
-  font-size: clamp(0.95rem, 1.6cqw, 1.1rem);
+  /*
+    Scales with the scene box, which is what keeps the bubble in proportion to
+    the picture on both layouts: the scene is the full viewport on a desktop and
+    half of it on a stacked phone.
+
+    The floor is deliberately below the old 0.95rem. Container units resolve
+    against .scene, and on a stacked phone that box is around 400px, so 1.6cqw
+    lands near 6px and the clamp spent nearly all its range pinned to the floor:
+    the bubble was setting full body copy size while sitting over a 390px wide
+    picture. 0.8rem is a readable small size that still beats the terminal's text
+    it is competing with.
+  */
+  font-size: clamp(0.8rem, 1.5cqw, 1.05rem);
   font-weight: 500;
   line-height: 1.35;
   letter-spacing: 0.01em;

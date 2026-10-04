@@ -45,7 +45,6 @@ export function Hero() {
             percent={scene.battery}
             phaseLabel={scene.phaseLabel}
             charging={scene.charging}
-            discharging={scene.discharging}
             paused={scene.paused}
           />
         </div>

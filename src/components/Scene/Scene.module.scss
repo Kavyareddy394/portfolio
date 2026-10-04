@@ -1,6 +1,10 @@
 /*
   The scene is the page background: it fills the whole hero, edge to edge.
   container-type: size lets .artboard do the cover maths in real pixels below.
+
+  On narrow screens this stops being full bleed and becomes the top half of a
+  stacked layout, so the rule below is scoped rather than moved: see the media
+  query at the bottom of this file.
 */
 .scene {
   position: absolute;
@@ -11,17 +15,38 @@
 }
 
 /*
-  The artboard keeps the artwork's 16:9 shape and is sized to COVER the scene,
-  centred. Sizing the artboard rather than the images is what lets the z letters
-  and the hotspot keep using artwork percentages on any screen: a percent of the
-  artboard is always the same percent of the picture, with the overflow cropped
-  evenly instead of the artwork being squashed.
+  The artboard keeps the artwork's 16:9 shape and is sized to COVER the scene.
+  Sizing the artboard rather than the images is what lets the z letters and the
+  hotspot keep using artwork percentages on any screen: a percent of the artboard
+  is always the same percent of the picture, with the overflow cropped instead of
+  the artwork being squashed.
+
+  Cover sizing alone is not enough, though. The picture is wider than the box in
+  most desktop cases and taller in the stacked phone case, and centring it leaves
+  the monitors off the right edge on the narrower desktops: at 1024x768 a centred
+  cover shows x 13% to 88% and the screens at 79% to 92% are half cut.
+
+  So the board is not centred, it is slid right until --frame-right (92, the
+  right edge of the monitors) is the last thing in shot, and only as far as that:
+  min(0px, ...) means a box that already has room, such as a 1920 screen or a
+  landscape phone, shows the whole picture and is left alone.
+
+  Writing it as one expression rather than a breakpoint matters, because a media
+  query cannot see this box. (min-aspect-ratio: 16/9) tests the viewport, not the
+  scene, so it answers the wrong question the moment the scene becomes the top
+  half of a stacked layout: a 900x350 scene sits inside a 900x700 viewport, and
+  the query is false while the scene is the wide one.
 */
 .artboard {
+  --frame-right: 92;
+
   position: absolute;
   top: 50%;
-  left: 50%;
-  translate: -50% -50%;
+  translate: 0 -50%;
+  left: min(
+    0px,
+    calc(100cqw - (var(--frame-right) / 100) * max(100cqw, calc(100cqh * 16 / 9)))
+  );
   width: max(100cqw, calc(100cqh * 16 / 9));
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -29,22 +54,93 @@
 }
 
 /*
-  Narrow screens: a 16:9 picture only shows about a quarter of its own width on
-  a portrait phone, which is less than she is wide, so a centred cover crops her
-  out of shot entirely. Zoom in and pan up instead, which parks her head in the
-  clear space above the terminal.
+  Narrow, tall screens: the scene becomes the top half of a stacked layout and the
+  terminal moves underneath it, so the framing maths changes completely.
 
-  The zoom and the pan are one solution to two constraints that nearly collide on
-  a short phone: the pan cannot go much further up without uncovering the bottom
-  edge, and it cannot go less far without her head hiding behind the text. 1.55
-  and -67% is the pair that satisfies both down to a 360x640 screen, leaving
-  roughly 10px of slack at the bottom. Relax either one alone and re-run the
-  framing check before changing the other.
+  What forced the old zoom: the terminal used to float on top of the artwork, so
+  the only way to keep her head clear of the text was to zoom in hard and pan up.
+  At 1.55x on a 390px phone that left a visible window of just 17% of the
+  artwork's width, x 61.6% to 78.4%. The monitors sit at x 79% to 92%, so the
+  entire right hand side of every frame was off screen.
+
+  With nothing overlapping the picture there is no reason to zoom at all, and no
+  reason to crop: a cover sized artboard in a 390x422 box shows 52% of the width,
+  which is enough to hold the whole band that matters, her silhouette from x 46%
+  through the monitors to x 92%. So the artboard drops back to unzoomed and lets
+  the base rule's --frame-right do the framing.
+
+  There is nothing left to set per breakpoint, which is the point: the box changes
+  shape between these two cases, from wider than 16:9 on a short landscape phone to
+  far taller than 16:9 here, and one expression covers both without a query that
+  cannot see the box.
 */
-@media (max-width: 999px) {
-  .artboard {
-    width: calc(max(100cqw, 100cqh * 16 / 9) * 1.55);
-    translate: -70% -67%;
+@media (max-width: 999px) and (min-height: 480px) {
+  .scene {
+    /*
+      In flow rather than absolute, so it becomes the first row of the hero's
+      stacked layout instead of a layer behind everything.
+
+      The clamp is the half the brief asked for, with a floor so a short screen
+      still shows her at a usable size and a ceiling so a tall phone does not
+      squeeze the terminal into a letterbox.
+    */
+    position: relative;
+    inset: auto;
+    height: clamp(240px, 50svh, 440px);
+  }
+
+  /*
+    The left hand scrim existed to give the terminal text contrast where it
+    overlapped the artwork. Nothing overlaps it now, so the scrim goes and only a
+    soft bottom fade is kept, to seat the picture against the terminal below.
+  */
+  .tint {
+    background: linear-gradient(to top, rgba(6, 7, 11, 0.55), transparent 34%);
+  }
+}
+
+/*
+  Narrow AND short, which is a phone held sideways. There is no room to split:
+  half of a 390px tall viewport is 195px, and the terminal and battery together
+  are taller than that, so a stacked layout would either crush the artwork or
+  overflow into a second screen.
+
+  So this case keeps the original full bleed scene with the terminal over it. The
+  zoom is still gone, which is the part that mattered: a landscape viewport is
+  wider than 16:9, so the artboard is sized by width and the entire picture is
+  visible with nothing cropped at all.
+
+  The one thing that has to be watched here is that the panel is back on top of
+  the artwork, so its width is capped well short of her head. Her head sits at
+  x 70% of the picture, which on an 844px wide landscape phone is x 591.
+
+  The cap is on .content, which sits inside .shell, and .shell is the .container
+  that adds a gutter of clamp(1.25rem, 4vw, 2.5rem) on each side. So the panel's
+  right edge lands at the viewport percentage plus that gutter: 58% of 844 is
+  490, and with the 34px gutter the edge is at 524, clear of her head with room
+  to spare. 62% would reach 557 and start to crowd her, and the default
+  min(560px, 100%) reaches 594 and covers her outright, which is what this fixes.
+  Re-run the framing check before raising it.
+
+  The scrim also comes back here, for the same reason: the panel is over the
+  artwork again and needs something to give it contrast. It is faded out well
+  before her head rather than running the full width, so the picture stays clean
+  where she is.
+*/
+@media (max-width: 999px) and (max-height: 479px) {
+  /*
+    No room for the loose spacing or the note at this height, and the panel needs
+    every pixel it can get to stay legible.
+  */
+  .tint {
+    background:
+      linear-gradient(
+        to right,
+        rgba(6, 7, 11, 0.86),
+        rgba(6, 7, 11, 0.6) 58%,
+        transparent 78%
+      ),
+      linear-gradient(to top, rgba(6, 7, 11, 0.5), transparent 45%);
   }
 }
 

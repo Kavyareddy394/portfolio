@@ -208,17 +208,6 @@ export const sceneConfig = {
      */
     discharge: { from: 100, to: 0, ms: 80_000 },
 
-    /**
-     * Bar colour while it drains. Scoped to coding on purpose: the sleeping
-     * phases sit at the bottom of the bar for two whole minutes, and recolouring
-     * them would turn a restful red into a warning.
-     */
-    codingColors: {
-      /** Above this the bar is green. */
-      healthyAbove: 50,
-      /** From here down to zero it is amber, and red below it. */
-      warnAtOrAbove: 20,
-    },
   },
 
   timing: {
@@ -471,12 +460,6 @@ export const sceneConfig = {
 
   labels: {
     scene: "Tap the scene to wake her",
-    battery: {
-      paused: "Paused",
-      charging: "Charging while she rests",
-      draining: "Draining while she codes",
-      idle: "Idle",
-    },
   },
 
   reducedMotion: {
@@ -500,20 +483,6 @@ export const sceneConfig = {
     } as Record<Phase, number>,
   },
 } as const;
-
-/**
- * Bar colour while the battery drains.
- *
- * Green while there is plenty left, amber before the last fifth, red under it.
- */
-export type BatteryTone = "healthy" | "warn" | "danger";
-
-export function batteryTone(percent: number): BatteryTone {
-  const { healthyAbove, warnAtOrAbove } = sceneConfig.battery.codingColors;
-  if (percent > healthyAbove) return "healthy";
-  if (percent >= warnAtOrAbove) return "warn";
-  return "danger";
-}
 
 /** A random duration inside a configured range, in milliseconds. */
 export function randomMs([min, max]: readonly [number, number]): number {

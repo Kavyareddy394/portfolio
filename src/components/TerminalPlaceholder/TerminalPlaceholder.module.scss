@@ -51,7 +51,14 @@
   gap: var(--space-2);
   padding: var(--space-5);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: clamp(0.72rem, 0.66rem + 0.3vw, 0.85rem);
+  /*
+    Monospace at a clamp whose midpoint is nearly flat. The panel is a fixed 560px
+    cap on a wide screen, so there is no need for it to track the viewport much:
+    what matters is that it does not shrink to nothing on a 320px phone, hence the
+    0.7rem floor, and does not get comically large on a wide desktop, hence the
+    0.82rem ceiling.
+  */
+  font-size: clamp(0.7rem, 0.68rem + 0.1vw, 0.82rem);
   line-height: 1.7;
 }
 
@@ -101,17 +108,25 @@
 }
 
 /*
-  This panel is anchored to the bottom of the hero, so its height is what
-  decides how much of her it covers. Whenever the layout stacks, or the screen
-  is short, the placeholder note and the loose spacing are dropped: that makes
-  the panel a predictable height, which is what lets the scene framing keep her
-  head clear on a 360x640 phone as well as a 430x932 one.
+  This panel is anchored to the bottom of the hero, so its height is what decides
+  how much of her it covers. Whenever the layout stacks, or the screen is short,
+  the placeholder note and the loose spacing are dropped: that makes the panel a
+  predictable height, which is what lets the scene framing keep her head clear on
+  a 360x640 phone as well as a 430x932 one.
 */
 @media (max-width: 999px), (max-height: 720px) {
   .body {
     gap: var(--space-1);
     padding: var(--space-3) var(--space-4);
     line-height: 1.45;
+    /*
+      Narrow screens are the case where the terminal has the least room and the
+      most text competing with it: on a stacked phone it shares the bottom band
+      with the bar and competes with the dialogue bubble for attention. One step
+      down from the wide screen size, held flat rather than clamped, because at
+      this size a fluid value would only ever be rounding to the same two numbers.
+    */
+    font-size: 0.66rem;
   }
 
   .note {

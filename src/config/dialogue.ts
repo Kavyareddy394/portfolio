@@ -24,33 +24,37 @@ export type Tail = "down" | "up" | "left" | "right";
 /**
  * Placement is in artwork percentages, the same coordinate system the z letters
  * use, so the bubble tracks her head on any screen shape instead of drifting off
- * the art when the 16:9 artboard gets cropped or zoomed on a phone.
+ * the art when the 16:9 artboard gets cropped on a phone.
  *
- * She sleeps with the top of her head at about y 56, so y 48 leaves the bubble
- * just above it with the tail pointing down at her. The Phase 2 poses lean back,
- * which drops her head, so those anchors sit lower.
+ * An anchor is the point the tail tip lands on. For a "down" tail that is the
+ * bottom middle of the bubble, so the bubble sits on its anchor rather than above
+ * it, and the tail bridges the last fraction of an em down onto her.
  *
- * An anchor is the point the tail tip lands on, which for a "down" tail is the
- * bottom middle of the bubble. So each one sits just above her head and the
- * bubble floats above that.
+ * The y values are lower than they used to be, which was the fix for the bubble
+ * reading as too high. Anchoring on the crown of her head left the bubble in the
+ * empty band above her; on a stacked phone that band is the strip above the nav
+ * rather than anything worth spending the height on. Her sleeping head tops out at
+ * about y 56, so 55 puts the bubble just above her, and the leaning poses sit
+ * lower again. Verified with ?debug=1: the bubble's bottom edge measures y 55 on
+ * every screen shape from 320x568 up to 1920x1080.
  */
 export const dialogueAnchors = {
-  deepSleep: { x: 70, y: 48 },
-  lightSleep: { x: 70, y: 48 },
+  deepSleep: { x: 70, y: 55 },
+  lightSleep: { x: 70, y: 55 },
 
   /* Phase 2, chin and pen: upright, same as sleeping but awake. */
-  thinking: { x: 70, y: 48 },
+  thinking: { x: 70, y: 55 },
   /* Phase 2, half lean and full lean: her head has dropped and gone back. */
-  thinkingLeaning: { x: 67, y: 56 },
+  thinkingLeaning: { x: 67, y: 61 },
 
   /*
     Phase 3, the click reaction. She has turned round to face the viewer, and the
     typing frames put her head between x 62 and x 67, y 43 to y 57, measured off
-    the difference between the lookdown and lookup pairs. Pinning the tail at the
-    top of that range puts the bubble on the wall above her rather than across
-    her face.
+    the difference between the lookdown and lookup pairs. Anchored inside that
+    range rather than at the top of it, so the bubble sits beside her rather than
+    above her while the tail points up at her face.
   */
-  coding: { x: 64.5, y: 43 },
+  coding: { x: 64.5, y: 52 },
 } as const satisfies Record<string, Anchor>;
 
 export const dialogueTails = {

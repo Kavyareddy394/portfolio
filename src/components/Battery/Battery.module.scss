@@ -1,48 +1,26 @@
+/*
+  A gauge, not a panel. It sits beside the terminal as a narrow vertical strip on
+  wide screens and becomes a thin horizontal rule above it on narrow ones, so the
+  only thing inside is the number and the track.
+
+  Both orientations are driven off the same two custom properties. --at carries
+  the fill position, and CSS decides whether that becomes a height or a width,
+  which is why the component does not have to know which way round it is.
+*/
 .battery {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
   backdrop-filter: blur(10px);
 }
 
-.head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: 500;
-}
-
-.bolt {
-  display: inline-grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--gradient);
-  color: #06070b;
-  animation: bolt var(--dur-slow) steps(1, end) infinite;
-}
-
-[data-charging="true"] .percent {
-  color: var(--text);
-}
-
 .percent {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -55,98 +33,93 @@
 
 .track {
   position: relative;
-  height: 8px;
   border-radius: var(--radius-full);
   background: var(--surface-strong);
   box-shadow: inset 0 0 0 1px var(--line);
   overflow: hidden;
 }
 
+/*
+  Vertical by default, because that is the wide screen case: a 56px column next to
+  the terminal, filling the height it is given. The fill grows from the bottom,
+  so the bar reads like a level rather than a progress bar running left to right.
+*/
+.battery {
+  flex-direction: column;
+}
+
+.track {
+  width: 10px;
+  flex: 1;
+  min-height: 90px;
+}
+
 .fill {
-  display: block;
-  height: 100%;
+  position: absolute;
+  inset: auto 0 0 0;
+  height: var(--at);
   border-radius: inherit;
-  background: var(--gradient);
-  background-size: 160% 100%;
-  transition: width 200ms linear;
+  background: var(--accent-3);
+  transition: height 200ms linear;
 }
 
 [data-charging="true"] .fill {
   animation: drift 6s var(--ease-in-out) infinite;
 }
 
-/*
-  Phase 3. The bar is the clock now that it is falling, so its colour says how
-  much of the two minutes is left: mint while there is plenty, lamplight amber
-  over the last half, red over the last fifth.
-
-  These replace the gradient rather than tinting it, and the drifting animation
-  above is already off, because data-charging is false while it drains.
-*/
-[data-tone="healthy"] .fill {
-  background: var(--accent-3);
-}
-
-[data-tone="warn"] .fill {
-  background: var(--warm);
-}
-
-[data-tone="danger"] .fill {
-  background: var(--danger);
-}
-
-[data-tone] .percent {
-  color: var(--text);
-}
-
-/* Where the phase flips from deep sleep to light sleep. */
+/* Where each phase hands over to the next. */
 .marker {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
+  left: 0;
+  right: 0;
+  bottom: var(--at);
+  height: 1px;
   background: var(--line-strong);
-}
-
-.caption {
-  font-size: var(--text-xs);
-  color: var(--text-faint);
 }
 
 @keyframes drift {
   0%,
   100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-@keyframes bolt {
-  0%,
-  55% {
     opacity: 1;
   }
-  56%,
-  100% {
-    opacity: 0.35;
+  50% {
+    opacity: 0.62;
   }
 }
 
 /*
-  The hero stacks this panel under the terminal, bottom-anchored, so its height
-  eats into the room the scene framing has left for her. On stacked or short
-  layouts the caption is dropped and the spacing tightened, which is what keeps
-  her head clear of the text on a 360x640 phone.
+  Narrow screens: the layout stacks into three bands, character then bar then
+  terminal, and the bar is the thin one. It is 6px tall because at that size it is
+  a rule with a fill in it, not something to read a number off, so the percentage
+  goes and only the track survives.
 */
-@media (max-width: 999px), (max-height: 720px) {
+@media (max-width: 999px) and (min-height: 480px) {
   .battery {
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-4);
+    flex-direction: row;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
   }
 
-  .caption {
-    display: none;
+  .track {
+    width: 100%;
+    height: 6px;
+    min-height: 0;
+    flex: none;
+  }
+
+  .fill {
+    inset: 0 auto 0 0;
+    width: var(--at);
+    height: 100%;
+    transition: width 200ms linear;
+  }
+
+  .marker {
+    top: 0;
+    bottom: 0;
+    left: var(--at);
+    right: auto;
+    width: 1px;
+    height: auto;
   }
 }

@@ -27,14 +27,21 @@
 }
 
 /*
-  Capped and pinned left, so the terminal sits in the empty half of the room
-  and never covers her.
+  Capped and pinned left, so the terminal sits in the empty half of the room and
+  never covers her. The battery rides along inside this row rather than being
+  given its own.
+*/
+/*
+  Wide screens: the terminal and the battery sit side by side as one row, the
+  terminal taking the space and the battery staying a narrow strip on its right
+  edge. align-items: stretch lets the strip match the terminal's height so the
+  two read as a single instrument rather than two stacked cards.
 */
 .content {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-5);
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--space-3);
   width: 100%;
   max-width: min(560px, 100%);
 }
@@ -48,13 +55,98 @@
   pointer-events: auto;
 }
 
-@media (max-width: 999px) {
+/*
+  Narrow AND tall, which is a phone held upright: the stacked split. The artwork
+  gets the top half of the screen to itself and the terminal sits underneath it,
+  rather than the terminal floating on top of her.
+
+  Before this the terminal overlapped the picture, which forced two compensating
+  hacks that are both gone now: the artboard had to be zoomed 1.55x to keep her
+  head clear of the text, and a heavy left hand scrim had to darken the artwork to
+  give that text contrast. With nothing on top of the picture the zoom goes away,
+  and that is what was cutting off the right hand side of every frame.
+
+  A grid rather than two flex rows, because the scene row has to be an exact
+  height. That row is the container the artwork percentages resolve against, so a
+  row sized by its content would move the framing every time the terminal grew a
+  line. The terminal row takes what is left and scrolls if it has to.
+
+  The short landscape case is handled in Scene.module.scss, which explains why it
+  cannot be stacked.
+*/
+@media (max-width: 999px) and (min-height: 480px) {
   .hero {
-    /* Stacked layout: the art takes the top, the text sits along the bottom. */
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /*
+    pointer-events: none is inherited from .shell above, and .content below opts
+    back in for the terminal and the battery, so the empty part of this row still
+    lets clicks through to the scene.
+
+    overflow-y: auto is the "can be managed" half of the brief: if the terminal
+    and battery are taller than the space left over, this row scrolls instead of
+    pushing the page into a second screen.
+  */
+  .shell {
+    display: flex;
+    align-items: center;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /*
+    Three bands, top to bottom: artwork, then the bar, then the terminal. The bar
+    goes above the terminal because it is a 6px rule and the terminal is a box;
+    putting the thin one last would leave the panel's bottom edge as the thing the
+    eye lands on.
+
+    order puts the bar first in the visual stack while leaving it last in the DOM,
+    so the reading order stays terminal then charge, which is the order you
+    actually use them in.
+  */
+  .content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+    max-width: 100%;
+  }
+
+  .content > :first-child {
+    order: 2;
+  }
+
+  .content > :last-child {
+    order: 1;
+  }
+}
+
+/*
+  Narrow AND short: a phone held sideways. There is no room to split the screen
+  here, so the scene stays full bleed with the panel over it, as it always was.
+  Scene.module.scss has the reasoning and keeps the zoom off in this case too.
+
+  What needs handling here is the panel's width. Her head sits at x 70% of the
+  picture, which is x 591 on an 844px wide landscape phone, and the default
+  max-width of min(560px, 100%) reaches x 594, covering her. She is the one thing
+  in the hero that is clickable, so a panel sitting on top of her head means the
+  most interesting part of the scene stops responding to taps.
+
+  58% of the viewport is 490px, and .shell is also the .container, which adds a
+  gutter of clamp(1.25rem, 4vw, 2.5rem): 34px here. So the panel's right edge
+  lands at 524, which clears her with room to spare. Re-run the framing check
+  before raising it.
+*/
+@media (max-width: 999px) and (max-height: 479px) {
+  .hero {
     align-items: flex-end;
   }
 
   .content {
-    max-width: 100%;
+    max-width: 58%;
   }
 }

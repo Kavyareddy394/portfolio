@@ -32,12 +32,12 @@ export function TerminalPlaceholder({
           <i data-hue="amber" />
           <i data-hue="green" />
         </span>
-        <span className={styles.title}>guest@portfolio — zsh</span>
+        <span className={styles.title}>guest — zsh</span>
       </div>
 
       <div className={styles.body}>
         <p className={styles.line}>
-          <span className={styles.prompt}>guest@portfolio</span>
+          <span className={styles.prompt}>guest</span>
           <span className={styles.path}>:~$</span> status
         </p>
 
@@ -49,7 +49,7 @@ export function TerminalPlaceholder({
         </p>
 
         <p className={styles.line}>
-          <span className={styles.prompt}>guest@portfolio</span>
+          <span className={styles.prompt}>guest</span>
           <span className={styles.path}>:~$</span>{" "}
           <span className={styles.cursor} aria-hidden="true" />
         </p>
