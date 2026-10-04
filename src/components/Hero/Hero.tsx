@@ -37,6 +37,7 @@ export function Hero() {
             phaseLabel={scene.phaseLabel}
             battery={scene.battery}
             charging={scene.charging}
+            discharging={scene.discharging}
             paused={scene.paused}
           />
 
@@ -44,6 +45,7 @@ export function Hero() {
             percent={scene.battery}
             phaseLabel={scene.phaseLabel}
             charging={scene.charging}
+            discharging={scene.discharging}
             paused={scene.paused}
           />
         </div>
@@ -58,6 +60,7 @@ export function Hero() {
           facing={scene.facing}
           frame={scene.frame}
           think={scene.think}
+          code={scene.code}
           ready={scene.ready}
           paused={scene.paused}
           speed={scene.speed}
@@ -65,6 +68,7 @@ export function Hero() {
           onSetBattery={scene.setBattery}
           onClick={() => scene.click(true)}
           onShowFinale={scene.showFinale}
+          onJumpTo={scene.jumpTo}
           onSetSpeed={scene.setSpeed}
         />
       ) : null}

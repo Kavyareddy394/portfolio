@@ -7,19 +7,21 @@
  *
  * Phases, in order, driven by the battery:
  *
- *   0 to 30%   deep sleep   (Phase 0)
- *  30 to 60%   light sleep  (Phase 1)
- *  60 to 90%   thinking     (Phase 2) alternating chin and pen poses
- *  90 to 100%  thinking, excited finale
- *  100%        wraps back to Phase 0
+ *   0 to 30%    deep sleep   (Phase 0)   20s
+ *  30 to 60%   light sleep  (Phase 1)   20s
+ *  60 to 90%   thinking     (Phase 2)   25s, alternating chin and pen poses
+ *  90 to 100%  thinking, excited finale  5s
+ *  100 to 0%   coding       (Phase 3)   80s, typing, running the other way
+ *  0%          wraps back to Phase 0
  *
- * TODO(phase3): 100 to 0% will be Coding, and the wrap at the bottom of
- * useSceneController is where that loop starts.
+ * The battery is the clock in both directions: it charges from 0 to 100 through
+ * the sleeping and thinking phases, then drains from 100 back to 0 while she
+ * codes, and the cycle starts again. One pass is two and a half minutes.
  */
 
 /* ------------------------------------------------------------------ types */
 
-export type Phase = "deepSleep" | "lightSleep" | "thinking";
+export type Phase = "deepSleep" | "lightSleep" | "thinking" | "coding";
 
 /** Which cheek she is sleeping on. Only deep sleep ever turns over. */
 export type Facing = "sideA" | "sideB";
@@ -56,25 +58,60 @@ export const frames = {
   p2_halfLean: "phase2_girl_1_half_lean.png",
   p2_fullLean1: "phase2_girl_2_full_lean1.png",
   p2_fullLean2: "phase2_girl_2_full_lean2.png",
+
+  /*
+    Phase 3: coding.
+
+    Each head position has its own pair of hand frames, so "which way is her head
+    tilted" and "which hand is down" are independent. p2_halfLean is reused to
+    get out of the Phase 2 finale.
+
+    These seven were exported at 1669x942 and 1670x941, one to three pixels off
+    the other frames. Every frame is stretched to the same 16:9 box, so the
+    mismatch is a scale difference of about 0.1% and never shows as a shift; it
+    is only why the crossfades here are kept short.
+  */
+  p3_downType1: "phase3_girl_lookdown_type1.png",
+  p3_downType2: "phase3_girl_lookdown_type2.png",
+  p3_upType1: "phase3_girl_lookup_type1.png",
+  p3_upType2: "phase3_girl_lookup_type2.png",
+  p3_angryTurn: "phase3_girl_angry_turn.png",
+  p3_angryTalk1: "phase3_girl_angry_talk_face1.png",
+  p3_angryTalk2: "phase3_girl_angry_talk_face2.png",
 } as const;
 
 export type FrameKey = keyof typeof frames;
 
+/** Which way her head is tilted while she types. */
+export type HeadPosition = "down" | "up";
+
 /**
- * The "Loading" screens.
+ * Which frame she is on while typing, by head position and then by hand.
  *
- * These are NOT full frames: they were generated from the empty desk, so they do
- * not contain the girl, and the thinking frames already show the monitors
- * themselves. They are deliberately unused. If a future phase ever needs to
- * repaint the screens, it has to clip them to the screen rectangles rather than
- * mounting them behind her.
+ * Exported so the controller can ask for "the down pose with the left hand up"
+ * without ever naming a file.
+ */
+export const typingFrames = {
+  down: ["p3_downType1", "p3_downType2"],
+  up: ["p3_upType1", "p3_upType2"],
+} as const satisfies Record<HeadPosition, readonly [FrameKey, FrameKey]>;
+
+/**
+ * The "Loading" screens, and screens showing code.
+ *
+ * Both sets were generated from the empty desk, so they do not contain the girl,
+ * and they are deliberately unused: the thinking and typing frames already carry
+ * their own monitors, and in the typing frames the screen content differs between
+ * type1 and type2, so the code appears to scroll on its own as the hands move.
+ *
+ * Kept as named exports so a future phase can reuse them as clipped overlays
+ * rather than mounting them behind her.
  */
 export const unusedScreenFrames = {
   loading1: "screens_loading_1.png",
   loading2: "screens_loading_2.png",
 } as const;
 
-/** Screens showing code. Unused until Phase 3. */
 export const codeScreenFrames = {
   code1: "screens_code_1.png",
   code2: "screens_code_2.png",
@@ -105,14 +142,22 @@ export const phaseLabels: Record<Phase, string> = {
   deepSleep: "Deep Sleep",
   lightSleep: "Light Sleep",
   thinking: "Thinking",
+  coding: "Coding",
 };
 
 export function phaseLabel(phase: Phase): string {
   return phaseLabels[phase];
 }
 
-/** Which phase a battery percentage belongs to. */
+/**
+ * Which phase a battery percentage belongs to.
+ *
+ * 100% is the top of coding rather than the end of thinking, because the finale
+ * is what hands over to it: the moment the charge lands on 100 the scene is
+ * already on its way into Phase 3.
+ */
 export function phaseFromBattery(percent: number): Phase {
+  if (percent >= sceneConfig.battery.fullPercent) return "coding";
   if (percent < sceneConfig.battery.deepSleepEndsAt) return "deepSleep";
   if (percent < sceneConfig.battery.lightSleepEndsAt) return "lightSleep";
   return "thinking";
@@ -125,10 +170,10 @@ export const sceneConfig = {
    * The battery is the clock. Each segment is a percentage range with a duration,
    * so the rate is derived rather than written twice:
    *
-   *   0 to 30   in 60s   0.5%/s
-   *  30 to 60   in 60s   0.5%/s
-   *  60 to 90   in 45s   ~0.667%/s
-   *  90 to 100  in 20s   0.5%/s   the finale, which has to land on 100 exactly
+   *   0 to 30   in 20s   1.5%/s
+   *  30 to 60   in 20s   1.5%/s
+   *  60 to 90   in 25s   1.2%/s
+   *  90 to 100  in 5s    2.0%/s   the finale, which has to land on 100 exactly
    *
    * The last segment is driven by the finale sequence rather than by free
    * running charge, so it is only a fallback here.
@@ -136,9 +181,7 @@ export const sceneConfig = {
   battery: {
     /** Where a fresh page load starts. */
     startPercent: 0,
-    /** What 100% wraps back to. */
-    wrapToPercent: 0,
-    /** Top of the bar. Also where the loop back to Phase 0 happens. */
+    /** Top of the bar. Also where Phase 3 starts. */
     fullPercent: 100,
 
     deepSleepEndsAt: 30,
@@ -148,11 +191,34 @@ export const sceneConfig = {
     finaleAtPercent: 90,
 
     segments: [
-      { from: 0, to: 30, ms: 60_000 },
-      { from: 30, to: 60, ms: 60_000 },
-      { from: 60, to: 90, ms: 45_000 },
-      { from: 90, to: 100, ms: 20_000 },
+      { from: 0, to: 30, ms: 20_000 },
+      { from: 30, to: 60, ms: 20_000 },
+      { from: 60, to: 90, ms: 25_000 },
+      { from: 90, to: 100, ms: 5_000 },
     ] as { from: number; to: number; ms: number }[],
+
+    /**
+     * Phase 3 runs the other way. The whole coding phase is this one segment:
+     * 100% down to 0% in eighty seconds, so the rate is derived from it the same
+     * way the charging segments are.
+     *
+     * It is kept apart from `segments` rather than added to it because that list
+     * only climbs, and something reading it should not have to care which way the
+     * bar is going.
+     */
+    discharge: { from: 100, to: 0, ms: 80_000 },
+
+    /**
+     * Bar colour while it drains. Scoped to coding on purpose: the sleeping
+     * phases sit at the bottom of the bar for two whole minutes, and recolouring
+     * them would turn a restful red into a warning.
+     */
+    codingColors: {
+      /** Above this the bar is green. */
+      healthyAbove: 50,
+      /** From here down to zero it is amber, and red below it. */
+      warnAtOrAbove: 20,
+    },
   },
 
   timing: {
@@ -274,11 +340,17 @@ export const sceneConfig = {
       halfLeanMs: 600,
       /**
        * Exactly the length of the 90 to 100 battery segment, so the bar reaches
-       * 100 on the last frame of the lean rather than before or after it.
+       * 100 on the last frame of the lean rather than before or after it. These
+       * two numbers are one decision: move one and move the other.
        */
-      fullLeanMs: 20_000,
+      fullLeanMs: 5_000,
       fadeMs: 320,
-      dialogueMs: 5000,
+      /**
+       * Long enough to read the line, short enough that the bubble is gone while
+       * she is still leaning. Otherwise it hangs over the last stretch of a lean
+       * that is only five seconds long.
+       */
+      dialogueMs: 3_600,
       dialogue: "I'm excited to implement this idea!",
     },
 
@@ -293,6 +365,82 @@ export const sceneConfig = {
       skipAlternation: true,
       /** Ignore frameHoldMs in the click reaction and the finale too. */
       skipLeanAlternation: true,
+    },
+  },
+
+  /**
+   * Phase 3: coding.
+   *
+   * Entering the phase plays the Phase 2 half lean, so she arrives at the desk
+   * rather than snapping into it, then the typing loop runs until the battery
+   * empties. The screens need no overlay: the typing frames already show code,
+   * and the screen area differs between type1 and type2, so alternating the
+   * hands scrolls the code on its own.
+   */
+  coding: {
+    /** Leaving the excited finale. */
+    enter: {
+      halfLeanMs: 600,
+      halfLeanFadeMs: 320,
+      /** Crossfade from the half lean into the first typing pose. */
+      poseFadeMs: 600,
+      /** She starts at the keyboard rather than at the screens. */
+      head: "down",
+    },
+
+    /** The loop. Head down for a while, head up for a shorter beat, forever. */
+    typing: {
+      /** Fast, because this alternation is what reads as typing. */
+      handMs: 300,
+      /**
+       * Very short on purpose. Two crossfading frames that are 60% different in
+       * the hands look like a double exposure if either one is still fading when
+       * the other arrives.
+       */
+      handFadeMs: 100,
+      /** Moving the head between the keyboard and the screens is slower. */
+      headFadeMs: 250,
+      /** Random hold per head position. */
+      downMs: [4000, 7000],
+      upMs: [2000, 4000],
+    },
+
+    /** Click while typing: she turns round and tells you to be quiet. */
+    reaction: {
+      /** Onto the angry turn, and how long she holds it before talking. */
+      turnFadeMs: 200,
+      turnMs: 700,
+      /** Mouth frames, alternating for this long. */
+      talkMs: 3000,
+      talkFrameMs: 250,
+      /**
+       * Just enough to hide the one pixel width difference between the two mouth
+       * exports. At zero a hard swap would twitch the whole picture.
+       */
+      talkFadeMs: 70,
+      /** Back to the angry turn on the way out. */
+      backTurnMs: 300,
+      backFadeMs: 200,
+      /** Crossfade from the angry turn back into typing. */
+      returnFadeMs: 200,
+      dialogue: "Shh... I'm busy!",
+    },
+
+    /** The battery empties: a long, slow fade back to the sleeping frames. */
+    exit: {
+      fadeMs: 1500,
+    },
+
+    /**
+     * Reduced motion drops the fast hand alternation, which is a flicker between
+     * two nearly identical poses, and slows the mouth flap to a readable rate.
+     * The head still moves between down and up, so nothing sits frozen.
+     */
+    reducedMotion: {
+      /** Hold one hand frame instead of swapping every handMs. */
+      skipHandAlternation: true,
+      /** Mouth frames swap this often instead of every talkFrameMs. */
+      talkFrameMs: 900,
     },
   },
 
@@ -323,6 +471,12 @@ export const sceneConfig = {
 
   labels: {
     scene: "Tap the scene to wake her",
+    battery: {
+      paused: "Paused",
+      charging: "Charging while she rests",
+      draining: "Draining while she codes",
+      idle: "Idle",
+    },
   },
 
   reducedMotion: {
@@ -331,9 +485,46 @@ export const sceneConfig = {
     /** No idle breathing. Poses still change, on their own schedule. */
     disableBreathing: true,
   },
+
+  /**
+   * Where the debug panel's "jump to phase" buttons put the battery. Each one is
+   * inside its own phase rather than on the boundary, so the jump lands on a
+   * phase that is actually running instead of about to change.
+   */
+  debug: {
+    batteryForPhase: {
+      deepSleep: 10,
+      lightSleep: 45,
+      thinking: 65,
+      coding: 100,
+    } as Record<Phase, number>,
+  },
 } as const;
 
-/** Percentage per second for whichever segment the battery is inside. */
+/**
+ * Bar colour while the battery drains.
+ *
+ * Green while there is plenty left, amber before the last fifth, red under it.
+ */
+export type BatteryTone = "healthy" | "warn" | "danger";
+
+export function batteryTone(percent: number): BatteryTone {
+  const { healthyAbove, warnAtOrAbove } = sceneConfig.battery.codingColors;
+  if (percent > healthyAbove) return "healthy";
+  if (percent >= warnAtOrAbove) return "warn";
+  return "danger";
+}
+
+/** A random duration inside a configured range, in milliseconds. */
+export function randomMs([min, max]: readonly [number, number]): number {
+  return min + Math.random() * (max - min);
+}
+
+/**
+ * Percentage per second while the bar is climbing.
+ *
+ * Always positive: the sign is the controller's business, not the config's.
+ */
 export function batteryRateAt(percent: number): number {
   for (const segment of sceneConfig.battery.segments) {
     if (percent >= segment.from && percent < segment.to) {
@@ -341,4 +532,17 @@ export function batteryRateAt(percent: number): number {
     }
   }
   return 0;
+}
+
+/**
+ * Percentage per second while the bar is falling.
+ *
+ * One rate for the whole descent rather than a lookup per percentage. Coding has
+ * to last exactly as long as the config says, and borrowing the climbing rates on
+ * the way down would stretch those two minutes to closer to three, because the
+ * bottom of the range climbs slowest.
+ */
+export function batteryDrainRate(): number {
+  const { from, to, ms } = sceneConfig.battery.discharge;
+  return ((from - to) / ms) * 1000;
 }

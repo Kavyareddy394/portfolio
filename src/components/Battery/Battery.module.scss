@@ -75,6 +75,30 @@
   animation: drift 6s var(--ease-in-out) infinite;
 }
 
+/*
+  Phase 3. The bar is the clock now that it is falling, so its colour says how
+  much of the two minutes is left: mint while there is plenty, lamplight amber
+  over the last half, red over the last fifth.
+
+  These replace the gradient rather than tinting it, and the drifting animation
+  above is already off, because data-charging is false while it drains.
+*/
+[data-tone="healthy"] .fill {
+  background: var(--accent-3);
+}
+
+[data-tone="warn"] .fill {
+  background: var(--warm);
+}
+
+[data-tone="danger"] .fill {
+  background: var(--danger);
+}
+
+[data-tone] .percent {
+  color: var(--text);
+}
+
 /* Where the phase flips from deep sleep to light sleep. */
 .marker {
   position: absolute;

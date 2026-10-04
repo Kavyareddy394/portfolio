@@ -29,6 +29,10 @@ export type Tail = "down" | "up" | "left" | "right";
  * She sleeps with the top of her head at about y 56, so y 48 leaves the bubble
  * just above it with the tail pointing down at her. The Phase 2 poses lean back,
  * which drops her head, so those anchors sit lower.
+ *
+ * An anchor is the point the tail tip lands on, which for a "down" tail is the
+ * bottom middle of the bubble. So each one sits just above her head and the
+ * bubble floats above that.
  */
 export const dialogueAnchors = {
   deepSleep: { x: 70, y: 48 },
@@ -38,6 +42,15 @@ export const dialogueAnchors = {
   thinking: { x: 70, y: 48 },
   /* Phase 2, half lean and full lean: her head has dropped and gone back. */
   thinkingLeaning: { x: 67, y: 56 },
+
+  /*
+    Phase 3, the click reaction. She has turned round to face the viewer, and the
+    typing frames put her head between x 62 and x 67, y 43 to y 57, measured off
+    the difference between the lookdown and lookup pairs. Pinning the tail at the
+    top of that range puts the bubble on the wall above her rather than across
+    her face.
+  */
+  coding: { x: 64.5, y: 43 },
 } as const satisfies Record<string, Anchor>;
 
 export const dialogueTails = {
@@ -45,6 +58,7 @@ export const dialogueTails = {
   lightSleep: "down",
   thinking: "down",
   thinkingLeaning: "down",
+  coding: "down",
 } as const satisfies Record<string, Tail>;
 
 export type AnchorKey = keyof typeof dialogueAnchors;
@@ -111,4 +125,11 @@ export const dialogueLines: Record<Phase, readonly string[]> = {
     "Wait. Wait. I've got it.",
     "Shh. Thinking is loud.",
   ],
+
+  /*
+    100 to 0%: coding. The click reaction plays a fixed line from
+    config/scene.ts, because she only ever says one thing when you interrupt her.
+    This is here so the record covers every phase.
+  */
+  coding: ["Shh... I'm busy!"],
 };

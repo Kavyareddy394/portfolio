@@ -8,7 +8,7 @@
 */
 .layer {
   position: absolute;
-  /* Above the frame stack, the loading overlay (3) and the tint (4). */
+  /* Above the frame stack, which tops out at 2, and the tint (4). */
   z-index: 6;
   width: 0;
   height: 0;

@@ -6,6 +6,8 @@ type TerminalPlaceholderProps = {
   phaseLabel: string;
   battery: number;
   charging: boolean;
+  /** Phase 3: the bar is falling rather than charging. */
+  discharging: boolean;
   paused: boolean;
 };
 
@@ -17,6 +19,7 @@ export function TerminalPlaceholder({
   phaseLabel,
   battery,
   charging,
+  discharging,
   paused,
 }: TerminalPlaceholderProps) {
   const mode = phaseLabel.toLowerCase();
@@ -41,7 +44,7 @@ export function TerminalPlaceholder({
         <p className={styles.line}>
           <span className={styles.muted}>
             mode: {mode} | battery: {Math.round(battery)}% |{" "}
-            {paused ? "paused" : charging ? "charging" : "idle"}
+            {paused ? "paused" : discharging ? "draining" : charging ? "charging" : "idle"}
           </span>
         </p>
 

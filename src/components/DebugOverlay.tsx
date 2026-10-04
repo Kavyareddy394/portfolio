@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./DebugOverlay.module.scss";
-import { frames, type FrameKey } from "@/config/scene";
+import { frames, phaseLabels, type FrameKey, type Phase } from "@/config/scene";
 import type { Activity } from "@/hooks/useSceneController";
 
 type DebugOverlayProps = {
@@ -12,6 +12,7 @@ type DebugOverlayProps = {
   facing: string;
   frame: FrameKey;
   think: string;
+  code: string;
   ready: boolean;
   paused: boolean;
   speed: number;
@@ -19,6 +20,7 @@ type DebugOverlayProps = {
   onSetBattery: (percent: number) => void;
   onClick: () => void;
   onShowFinale: () => void;
+  onJumpTo: (phase: Phase) => void;
   onSetSpeed: (multiplier: number) => void;
 };
 
@@ -26,15 +28,24 @@ type DebugOverlayProps = {
   Phase boundaries are buttons rather than typed numbers because they are the
   values that are awkward to reach by hand: 59 sits just below the wake up, 60
   lands on it, and 89 sits just below the finale.
+
+  100 and 1 are here for coding, which runs the other way: 100 is the moment she
+  starts typing and 1 is the last moment you can interrupt her before she passes
+  out.
 */
 const BATTERY_STOPS: { label: string; percent: number }[] = [
-  { label: "0%", percent: 0 },
-  { label: "29%", percent: 29 },
-  { label: "44%", percent: 44 },
-  { label: "59%", percent: 59 },
-  { label: "60%", percent: 60 },
+  { label: "100%", percent: 100 },
   { label: "89%", percent: 89 },
+  { label: "60%", percent: 60 },
+  { label: "59%", percent: 59 },
+  { label: "44%", percent: 44 },
+  { label: "29%", percent: 29 },
+  { label: "20%", percent: 20 },
+  { label: "1%", percent: 1 },
+  { label: "0%", percent: 0 },
 ];
+
+const PHASE_JUMPS = Object.keys(phaseLabels) as Phase[];
 
 export function DebugOverlay({
   battery,
@@ -44,6 +55,7 @@ export function DebugOverlay({
   facing,
   frame,
   think,
+  code,
   ready,
   paused,
   speed,
@@ -51,6 +63,7 @@ export function DebugOverlay({
   onSetBattery,
   onClick,
   onShowFinale,
+  onJumpTo,
   onSetSpeed,
 }: DebugOverlayProps) {
   return (
@@ -82,6 +95,11 @@ export function DebugOverlay({
           <dd>{think}</dd>
         </div>
         <div>
+          {/* Phase 3 only, same idea: walk in, typing, or the click. */}
+          <dt>code</dt>
+          <dd>{code}</dd>
+        </div>
+        <div>
           <dt>facing</dt>
           <dd>{facing}</dd>
         </div>
@@ -111,6 +129,19 @@ export function DebugOverlay({
         {BATTERY_STOPS.map((stop) => (
           <button key={stop.label} type="button" onClick={() => onSetBattery(stop.percent)}>
             {stop.label}
+          </button>
+        ))}
+      </div>
+
+      {/*
+        Phase jumps rather than battery stops, because each phase has an entrance
+        worth watching: thinking wakes her up and coding walks her in from the half
+        lean, neither of which a bare battery number would show.
+      */}
+      <div className={styles.buttons}>
+        {PHASE_JUMPS.map((target) => (
+          <button key={target} type="button" onClick={() => onJumpTo(target)}>
+            {phaseLabels[target].toLowerCase()}
           </button>
         ))}
         <button type="button" onClick={onClick}>

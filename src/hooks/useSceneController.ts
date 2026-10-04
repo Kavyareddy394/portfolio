@@ -4,13 +4,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FRAME_ORDER,
   allFrames,
+  batteryDrainRate,
   batteryRateAt,
   frameUrl,
   phaseFromBattery,
   phaseLabel,
+  randomMs,
   sceneConfig,
+  typingFrames,
   type Facing,
   type FrameKey,
+  type HeadPosition,
   type Phase,
 } from "@/config/scene";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -26,7 +30,10 @@ export type Activity =
   | "waking"
   | "thinking"
   | "leaning"
-  | "excited";
+  | "excited"
+  | "typing"
+  | "talking"
+  | "shushing";
 
 /** A line she is currently saying. `id` changes on every line. */
 export type Dialogue = {
@@ -58,6 +65,14 @@ type Step = {
  * excited stretch at the end of the charge. `enter` is the wake up.
  */
 type ThinkMode = "off" | "enter" | "loop" | "reaction" | "finale";
+
+/**
+ * Which Phase 3 movement is running.
+ *
+ * `enter` is the half lean out of the finale, `loop` the typing, `reaction` the
+ * click that turns her round.
+ */
+type CodeMode = "off" | "enter" | "loop" | "reaction";
 
 /** Mutable simulation state. Lives in a ref, mirrored into React state. */
 type Sim = {
@@ -94,6 +109,17 @@ type Sim = {
     poseFrameElapsed: number;
   } | null;
 
+  /* Phase 3. */
+  code: CodeMode;
+  /** Which way her head is tilted. */
+  head: HeadPosition;
+  /** Which of the two hand frames is up. */
+  hand: number;
+  /** Time left on the current hand frame. */
+  handElapsed: number;
+  /** Time left on the current head position. */
+  headElapsed: number;
+
   paused: boolean;
   speed: number;
   reducedMotion: boolean;
@@ -112,6 +138,8 @@ export type SceneController = {
   /** True while a scripted reaction (turn, stretch, wake, lean) is playing. */
   reacting: boolean;
   charging: boolean;
+  /** Phase 3 only: the bar is going down instead of up. */
+  discharging: boolean;
   paused: boolean;
   ready: boolean;
   reducedMotion: boolean;
@@ -121,11 +149,14 @@ export type SceneController = {
   missing: FrameKey[];
   dialogue: Dialogue | null;
   think: ThinkMode;
+  code: CodeMode;
   click: (force?: boolean) => void;
   setBattery: (percent: number) => void;
   setSpeed: (multiplier: number) => void;
   /** Debug only: skip straight to the excited finale. */
   showFinale: () => void;
+  /** Debug only: drop her straight into a phase. */
+  jumpTo: (phase: Phase) => void;
 };
 
 export function useSceneController(): SceneController {
@@ -164,6 +195,11 @@ export function useSceneController(): SceneController {
     poseElapsed: 0,
     poseFrameElapsed: 0,
     resume: null,
+    code: "off",
+    head: sceneConfig.coding.enter.head,
+    hand: 0,
+    handElapsed: 0,
+    headElapsed: 0,
     paused: true,
     speed: 1,
     reducedMotion: false,
@@ -184,6 +220,7 @@ export function useSceneController(): SceneController {
     fadeMs: number;
     reacting: boolean;
     think: ThinkMode;
+    code: CodeMode;
   }>({
     battery: sceneConfig.battery.startPercent,
     phase: phaseFromBattery(sceneConfig.battery.startPercent),
@@ -193,6 +230,7 @@ export function useSceneController(): SceneController {
     fadeMs: 0,
     reacting: false,
     think: "off",
+    code: "off",
   });
 
   /* ---------------------------------------------------------------- dialogue */
@@ -206,6 +244,7 @@ export function useSceneController(): SceneController {
     deepSleep: -1,
     lightSleep: -1,
     thinking: -1,
+    coding: -1,
   });
 
   /**
@@ -361,7 +400,8 @@ export function useSceneController(): SceneController {
       prev.frame === s.frame &&
       prev.fadeMs === s.fadeMs &&
       prev.reacting === reacting &&
-      prev.think === s.think
+      prev.think === s.think &&
+      prev.code === s.code
         ? prev
         : {
             battery,
@@ -372,6 +412,7 @@ export function useSceneController(): SceneController {
             fadeMs: s.fadeMs,
             reacting,
             think: s.think,
+            code: s.code,
           },
     );
   }, []);
@@ -687,6 +728,175 @@ export function useSceneController(): SceneController {
     [currentPose, poses.length, showFrame],
   );
 
+  /* ------------------------------------------------------- phase 3: coding */
+
+  /** The frame she is typing on: head position first, then which hand is down. */
+  const typingFrame = useCallback(
+    (head: HeadPosition, hand: number) => typingFrames[head][hand % 2],
+    [],
+  );
+
+  /** Puts the typing loop on a fresh head position with a fresh random hold. */
+  const resetHead = useCallback((head: HeadPosition) => {
+    const s = sim.current;
+    const cfg = sceneConfig.coding.typing;
+    s.head = head;
+    s.hand = 0;
+    s.handElapsed = 0;
+    s.headElapsed = randomMs(head === "down" ? cfg.downMs : cfg.upMs);
+  }, []);
+
+  /**
+   * Out of the Phase 2 finale: the half lean, then straight to the keyboard.
+   *
+   * The half lean is the pose she was already in, so the finale does not have to
+   * cut to a completely different picture before the typing starts.
+   */
+  const startCodingEnter = useCallback(() => {
+    const s = sim.current;
+    const cfg = sceneConfig.coding;
+
+    s.code = "enter";
+    s.think = "off";
+    s.resume = null;
+    s.pendingPhase = null;
+    s.activity = "leaning";
+    resetHead(cfg.enter.head);
+
+    startSequence([
+      {
+        frame: "p2_halfLean",
+        hold: cfg.enter.halfLeanMs,
+        fade: cfg.enter.halfLeanFadeMs,
+        activity: "leaning",
+        facing: "sideA",
+      },
+      {
+        frame: typingFrame(s.head, s.hand),
+        // The last step only has to outlast the crossfade: the loop takes over
+        // the moment the sequence ends.
+        hold: 0,
+        fade: cfg.enter.poseFadeMs,
+        activity: "typing",
+        facing: "sideA",
+      },
+    ]);
+  }, [resetHead, startSequence, typingFrame]);
+
+  /**
+   * The typing loop.
+   *
+   * Two independent timers. The hands swap fast and are what make it read as
+   * typing; the head swaps slowly and on a random hold, so she does not look like
+   * she is metronomic.
+   */
+  const typingLoop = useCallback(
+    (dt: number) => {
+      const s = sim.current;
+      const cfg = sceneConfig.coding.typing;
+
+      if (!(s.reducedMotion && sceneConfig.coding.reducedMotion.skipHandAlternation)) {
+        s.handElapsed += dt;
+        if (s.handElapsed >= cfg.handMs) {
+          s.handElapsed -= cfg.handMs;
+          s.hand = s.hand === 0 ? 1 : 0;
+          showFrame(typingFrame(s.head, s.hand), cfg.handFadeMs);
+        }
+      }
+
+      s.headElapsed -= dt;
+      if (s.headElapsed > 0) return;
+
+      resetHead(s.head === "down" ? "up" : "down");
+      s.activity = "typing";
+      showFrame(typingFrame(s.head, s.hand), cfg.headFadeMs);
+    },
+    [resetHead, showFrame, typingFrame],
+  );
+
+  /** Click while typing: she stops, turns round, and tells you to be quiet. */
+  const startCodeReaction = useCallback(() => {
+    const s = sim.current;
+    const cfg = sceneConfig.coding.reaction;
+
+    s.code = "reaction";
+    s.activity = "shushing";
+
+    /*
+      As many mouth frames as fit in the talk window. Rounded rather than
+      truncated so the last one always gets its full hold: a window that is not a
+      whole multiple still ends on time instead of clipping the final frame.
+    */
+    const talkFrameMs = s.reducedMotion
+      ? sceneConfig.coding.reducedMotion.talkFrameMs
+      : cfg.talkFrameMs;
+    const mouths = Math.max(2, Math.round(cfg.talkMs / talkFrameMs));
+
+    const steps: Step[] = [
+      {
+        frame: "p3_angryTurn",
+        hold: cfg.turnMs,
+        fade: cfg.turnFadeMs,
+        activity: "shushing",
+        facing: "sideA",
+      },
+    ];
+    for (let i = 0; i < mouths; i += 1) {
+      steps.push({
+        frame: i % 2 === 0 ? "p3_angryTalk1" : "p3_angryTalk2",
+        hold: talkFrameMs,
+        fade: cfg.talkFadeMs,
+        activity: "talking",
+        facing: "sideA",
+      });
+    }
+    steps.push({
+      frame: "p3_angryTurn",
+      hold: cfg.backTurnMs,
+      fade: cfg.backFadeMs,
+      activity: "shushing",
+      facing: "sideA",
+    });
+
+    startSequence(steps);
+    /*
+      The bubble belongs to the talking, not to the turn, so it waits out the turn
+      and comes down with the last mouth frame. Left to its own timings it would
+      still be typing when she has stopped talking.
+    */
+    say(cfg.dialogue, "coding", cfg.talkMs, cfg.turnMs);
+  }, [say, startSequence]);
+
+  /**
+   * Which phase the battery is asking for.
+   *
+   * phaseFromBattery only knows the four climbing ranges, which is not enough on
+   * its own: coding runs the bar back down through every one of them, so a
+   * draining battery reads as "thinking" one tick after it leaves 100% and she
+   * would flip between the two phases once a second for the whole two minutes.
+   *
+   * So while she is coding the descent is hers, and only the bottom of it is a
+   * boundary. Everywhere else the battery decides, which is what lets the debug
+   * overlay drop her into a phase by moving the bar.
+   */
+  const nextPhase = useCallback((): Phase => {
+    const s = sim.current;
+    if (s.phase === "coding") {
+      return s.battery <= 0 ? "deepSleep" : "coding";
+    }
+    return phaseFromBattery(s.battery);
+  }, []);
+
+  /** Phase 3: advance the typing loop unless a movement owns the frames. */
+  const codingTick = useCallback(
+    (dt: number) => {
+      const s = sim.current;
+      if (s.code === "reaction" || s.code === "enter") return;
+      typingLoop(dt);
+    },
+    [typingLoop],
+  );
+
   /**
    * The frame to rest on. Side B only has deep-sleep poses, so light sleep
    * always breathes on side A no matter which way she was facing.
@@ -706,6 +916,7 @@ export function useSceneController(): SceneController {
   const applyPhase = useCallback(
     (next: Phase) => {
       const s = sim.current;
+      const leaving = s.phase;
       s.phase = next;
       // The stretch plays once per phase.
       s.stretchDone = false;
@@ -715,6 +926,7 @@ export function useSceneController(): SceneController {
       s.facing = "sideA";
       s.activity = "breathing";
       s.think = "off";
+      s.code = "off";
       s.resume = null;
 
       if (next === "thinking") {
@@ -722,31 +934,25 @@ export function useSceneController(): SceneController {
         return;
       }
 
-      showFrame(idleFrame(next, true, s.facing), sceneConfig.timing.phaseChangeFadeMs);
-    },
-    [idleFrame, showFrame, startThinkingEnter],
-  );
+      if (next === "coding") {
+        startCodingEnter();
+        return;
+      }
 
-  const wrapLoop = useCallback(() => {
-    const s = sim.current;
-    /*
-      TODO(phase3): Coding lives here. The battery runs 100 to 0% with the
-      screens showing code, and when it reaches 0 it wraps again. Until then
-      100% drops straight back to Phase 0 through the same crossfade every other
-      phase change uses.
-    */
-    s.battery = sceneConfig.battery.wrapToPercent;
-    s.seq = null;
-    s.stretchDone = false;
-    s.breathUp = true;
-    s.breathElapsed = 0;
-    s.facing = "sideA";
-    s.activity = "breathing";
-    s.pendingPhase = null;
-    s.think = "off";
-    s.resume = null;
-    applyPhase("deepSleep");
-  }, [applyPhase]);
+      /*
+        Falling out of coding is the end of the whole cycle rather than one phase
+        change among several, so it gets the long way round: two minutes of
+        coding fades back into a sleeping room over a second and a half.
+      */
+      const fade =
+        leaving === "coding" && next === "deepSleep"
+          ? sceneConfig.coding.exit.fadeMs
+          : sceneConfig.timing.phaseChangeFadeMs;
+
+      showFrame(idleFrame(next, true, s.facing), fade);
+    },
+    [idleFrame, showFrame, startCodingEnter, startThinkingEnter],
+  );
 
   const endSequence = useCallback(() => {
     const s = sim.current;
@@ -792,10 +998,10 @@ export function useSceneController(): SceneController {
         return;
       }
 
-      // The finale is over: the charge is done, so loop back to Phase 0.
+      // The finale is over: the charge is done, so she goes to work.
       if (s.think === "finale") {
         s.battery = sceneConfig.battery.fullPercent;
-        wrapLoop();
+        startCodingEnter();
         return;
       }
 
@@ -816,19 +1022,68 @@ export function useSceneController(): SceneController {
       return;
     }
 
-    s.activity = "breathing";
+    /* Phase 3 movements. */
+    if (s.phase === "coding") {
+      // The half lean is over: hand the scene to the typing loop.
+      if (s.code === "enter") {
+        s.code = "loop";
+        s.activity = "typing";
+        showFrame(typingFrame(s.head, s.hand), sceneConfig.coding.enter.poseFadeMs);
+        return;
+      }
 
-    if (s.battery >= sceneConfig.battery.fullPercent) {
-      wrapLoop();
+      if (s.code === "reaction") {
+        /*
+          The bar can empty while she is talking. She finishes the sentence
+          first, because pendingPhase exists for exactly this: the boundary was
+          crossed mid movement and waits for her to settle.
+        */
+        const next = s.pendingPhase;
+        s.pendingPhase = null;
+        s.code = "loop";
+        s.activity = "typing";
+        if (next && next !== s.phase) {
+          applyPhase(next);
+          return;
+        }
+        // Back to typing in the head position the click interrupted, on the hand
+        // frame it happened to be showing.
+        showFrame(typingFrame(s.head, s.hand), sceneConfig.coding.reaction.returnFadeMs);
+        return;
+      }
+
+      // Cut short from outside, which only the debug overlay does. Back to the
+      // typing loop on the frame she is already showing.
+      s.code = "loop";
+      s.activity = "typing";
+      if (s.pendingPhase && s.pendingPhase !== s.phase) {
+        const next = s.pendingPhase;
+        s.pendingPhase = null;
+        applyPhase(next);
+        return;
+      }
+      showFrame(typingFrame(s.head, s.hand), sceneConfig.coding.typing.headFadeMs);
       return;
     }
+
+    s.activity = "breathing";
+
     if (s.pendingPhase && s.pendingPhase !== s.phase) {
       applyPhase(s.pendingPhase);
       s.pendingPhase = null;
       return;
     }
     showFrame(idleFrame(s.phase, true, s.facing), breathingFor(s.phase).fadeMs);
-  }, [applyPhase, breathingFor, currentPose, idleFrame, showFrame, startFinale, wrapLoop]);
+  }, [
+    applyPhase,
+    breathingFor,
+    currentPose,
+    idleFrame,
+    showFrame,
+    startCodingEnter,
+    startFinale,
+    typingFrame,
+  ]);
 
   const advanceSequence = useCallback(
     (dt: number) => {
@@ -928,27 +1183,35 @@ export function useSceneController(): SceneController {
         (s.phase === "thinking" && s.think === "reaction") || finaleEntering;
       const cap = held ? battery.finaleAtPercent : battery.fullPercent;
 
-      s.battery = Math.min(
-        s.battery + (batteryRateAt(s.battery) * dt) / 1000,
-        cap,
-      );
+      /*
+        Phase 3 drains, at one rate for the whole descent, and nothing holds the
+        bar back while she does it: not even a click reaction. She keeps working
+        through being interrupted, and a reaction still running when the bar
+        empties is finished off at 0% before the scene moves on.
+      */
+      const coding = s.phase === "coding";
+      const step = ((coding ? batteryDrainRate() : batteryRateAt(s.battery)) * dt) / 1000;
+
+      s.battery = coding
+        ? Math.max(0, s.battery - step)
+        : Math.min(s.battery + step, cap);
 
       if (s.seq) {
         // A reaction in progress always wins: the boundary waits for it.
-        const next = phaseFromBattery(s.battery);
+        const next = nextPhase();
         if (next !== s.phase) s.pendingPhase = next;
         advanceSequence(dt);
         mirror();
         return;
       }
 
-      const next = phaseFromBattery(s.battery);
+      const next = nextPhase();
       if (next !== s.phase) {
         applyPhase(next);
       } else if (s.phase === "thinking") {
         thinkingTick(dt);
-      } else if (s.battery >= battery.fullPercent) {
-        wrapLoop();
+      } else if (s.phase === "coding") {
+        codingTick(dt);
       } else {
         maybeStretch();
         if (!s.seq) idleBreathing(dt);
@@ -959,11 +1222,12 @@ export function useSceneController(): SceneController {
     [
       advanceSequence,
       applyPhase,
+      codingTick,
       idleBreathing,
       maybeStretch,
       mirror,
+      nextPhase,
       thinkingTick,
-      wrapLoop,
     ],
   );
 
@@ -1011,6 +1275,15 @@ export function useSceneController(): SceneController {
         return;
       }
 
+      if (s.phase === "coding") {
+        // Only the typing loop answers, so a click landing during the walk in from
+        // the finale, or during the reaction itself, is ignored.
+        if (s.code !== "loop") return;
+        startCodeReaction();
+        mirror();
+        return;
+      }
+
       if (s.phase === "deepSleep") {
         // Toggle whichever cheek she is not currently sleeping on.
         sayRandomLine("deepSleep");
@@ -1021,7 +1294,15 @@ export function useSceneController(): SceneController {
       }
       mirror();
     },
-    [mirror, sayRandomLine, startReaction, startSequence, turnSequence, wakeSequence],
+    [
+      mirror,
+      sayRandomLine,
+      startCodeReaction,
+      startReaction,
+      startSequence,
+      turnSequence,
+      wakeSequence,
+    ],
   );
 
   const setBattery = useCallback(
@@ -1056,6 +1337,27 @@ export function useSceneController(): SceneController {
     mirror();
   }, [applyPhase, mirror, startFinale]);
 
+  /**
+   * Debug only: put her in a phase.
+   *
+   * Sets the battery to the middle of that phase and then applies it, so the jump
+   * goes through the same entrance the cycle does: jumping to thinking wakes her
+   * up, jumping to coding walks her in from the half lean.
+   */
+  const jumpTo = useCallback(
+    (phase: Phase) => {
+      const s = sim.current;
+      s.seq = null;
+      s.index = 0;
+      s.stepElapsed = 0;
+      s.pendingPhase = null;
+      s.battery = sceneConfig.debug.batteryForPhase[phase];
+      applyPhase(phase);
+      mirror();
+    },
+    [applyPhase, mirror],
+  );
+
   const missing = useMemo(
     () => allFrames.filter((key) => loads[key] === "error"),
     [loads],
@@ -1063,6 +1365,7 @@ export function useSceneController(): SceneController {
 
   // Derived, never read off a ref during render.
   const paused = hidden || !inView || !ready;
+  const coding = view.phase === "coding";
 
   return {
     sceneRef,
@@ -1074,7 +1377,9 @@ export function useSceneController(): SceneController {
     frame: view.frame,
     fadeMs: view.fadeMs,
     reacting: view.reacting,
-    charging: !paused && view.battery < sceneConfig.battery.fullPercent,
+    // Phase 3 runs the bar down, so it is neither charging nor idle.
+    charging: !paused && !coding && view.battery < sceneConfig.battery.fullPercent,
+    discharging: !paused && coding,
     paused,
     ready,
     reducedMotion,
@@ -1084,9 +1389,11 @@ export function useSceneController(): SceneController {
     missing,
     dialogue,
     think: view.think,
+    code: view.code,
     click,
     setBattery,
     setSpeed,
     showFinale,
+    jumpTo,
   };
 }

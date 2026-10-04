@@ -22,6 +22,9 @@
      to sit inside the night artwork borrows it instead of inventing a colour. */
   --warm: #ffb877;
   --warm-soft: rgba(255, 184, 119, 0.32);
+  /* The battery's low warning. Warm rather than a pure red so it sits in the same
+     room as --warm instead of looking like an error state. */
+  --danger: #ff7a63;
 
   --gradient: linear-gradient(
     100deg,

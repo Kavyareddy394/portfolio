@@ -1,12 +1,14 @@
 "use client";
 
 import styles from "./Battery.module.scss";
-import { sceneConfig } from "@/config/scene";
+import { batteryTone, sceneConfig } from "@/config/scene";
 
 type BatteryProps = {
   percent: number;
   phaseLabel: string;
   charging: boolean;
+  /** Phase 3: the bar is falling, so it is coloured and captioned differently. */
+  discharging: boolean;
   paused: boolean;
 };
 
@@ -14,11 +16,19 @@ export function Battery({
   percent,
   phaseLabel,
   charging,
+  discharging,
   paused,
 }: BatteryProps) {
-  const { battery } = sceneConfig;
+  const { battery, labels } = sceneConfig;
   const clamped = Math.max(0, Math.min(percent, battery.fullPercent));
   const fill = (clamped / battery.fullPercent) * 100;
+
+  /*
+    Green, amber, red, but only while it drains. Left on all the time it would
+    paint the sleeping phases red, which is where she spends the first two
+    minutes of every cycle.
+  */
+  const tone = discharging ? batteryTone(clamped) : null;
 
   // Every phase change gets a tick on the track, so the three phases read as
   // three parts of one charge rather than one long bar.
@@ -28,8 +38,20 @@ export function Battery({
     battery.finaleAtPercent,
   ].filter((value) => value > 0 && value < battery.fullPercent);
 
+  const caption = paused
+    ? labels.battery.paused
+    : discharging
+      ? labels.battery.draining
+      : charging
+        ? labels.battery.charging
+        : labels.battery.idle;
+
   return (
-    <div className={styles.battery} data-charging={charging}>
+    <div
+      className={styles.battery}
+      data-charging={charging}
+      data-tone={tone ?? undefined}
+    >
       <div className={styles.head}>
         <span className={styles.label}>
           {phaseLabel}
@@ -68,9 +90,7 @@ export function Battery({
         ))}
       </div>
 
-      <p className={styles.caption}>
-        {paused ? "Paused" : charging ? "Charging while she rests" : "Idle"}
-      </p>
+      <p className={styles.caption}>{caption}</p>
     </div>
   );
 }
