@@ -14,7 +14,6 @@ export type Experience = {
   company: string;
   period: string;
   location?: string;
-  detail?: string;
   highlights?: string[];
   stack?: string[];
 };
@@ -35,16 +34,18 @@ export type SkillGroup = {
 };
 
 export const site = {
-  name: "Your Name",
-  initials: "YN",
-  role: "Creative Developer",
-  tagline: "I design and build digital experiences that feel alive.",
-  location: "Bengaluru, India",
-  email: "hello@example.com",
+  name: "Kavya Ramatatagari",
+  initials: "KR",
+  role: "Software Developer",
+  tagline: "Full-stack apps, microservices and AI/ML.",
+  location: "Bangalore, India",
+  email: "kavya394113@gmail.com",
+  phone: "+91-8985270016",
   socials: [
-    { label: "GitHub", href: "https://github.com" },
-    { label: "LinkedIn", href: "https://linkedin.com" },
-    { label: "X", href: "https://x.com" },
+    {
+      label: "LinkedIn",
+      href: "https://linkedin.com/in/kavyaramatatagari",
+    },
   ],
 };
 
@@ -59,99 +60,82 @@ export const navItems: NavItem[] = [
 ];
 
 export const about = {
-  heading: "Craft at the meeting point of design and engineering.",
+  heading: "Full-stack, microservices and AI/ML.",
   paragraphs: [
-    "Placeholder copy — swap this for two or three sentences about who you are, what you specialise in, and the kind of work you want to be known for. Keep it concrete: the problems you like solving and the tools you reach for.",
-    "A second paragraph works well here for context: what you are currently learning, what you are looking for next, or a philosophy you build with. Two paragraphs is the sweet spot for this section.",
+    "I build across the stack. React, Next.js and Node on the front; C# and .NET microservices on Azure and Docker at Schneider Electric; Java when the job is somebody else's backend platform. On the side I build things end to end and actually ship them, which is how SafeReach and HomeTracker exist.",
+    "AI/ML is the part I'm genuinely curious about rather than the part I'm quickest at. Cognitive load classification from EEG data, a stretch of work on quantum datasets — both taught me that the hard part is almost never the model, it's what you feed it. I want to keep going down that road.",
   ],
   highlights: [
-    { label: "Focus", value: "Interactive front-ends & motion" },
-    { label: "Currently", value: "Building design systems" },
-    { label: "Open to", value: "Freelance & full-time roles" },
+    { label: "Focus", value: "Full-stack applications & microservices" },
+    { label: "Currently", value: "Graduate Engineer Trainee @ Schneider Electric" },
+    { label: "Curious about", value: "AI/ML" },
   ],
 };
 
 export const education: Education[] = [
   {
-    degree: "B.Tech, Computer Science",
-    school: "University Name",
-    period: "2021 — 2025",
-    location: "City, Country",
-    detail: "Graduated with distinction. Coursework in data structures, computer graphics and human–computer interaction.",
-    highlights: ["CGPA 8.9 / 10", "Dean's List", "Club lead, year two"],
+    degree: "B.Tech, Computer Science and Engineering",
+    school: "VIT AP University",
+    period: "Sep 2022 — Present",
+    detail:
+      "Coursework: OOP, DSA, DBMS, Operating Systems, Computer Networks, DAA.",
+    highlights: ["CGPA 9.47 / 10"],
   },
   {
-    degree: "Senior Secondary, Science",
-    school: "School Name",
-    period: "2019 — 2021",
-    location: "City, Country",
-    highlights: ["94%", "Mathematics & Physics"],
+    degree: "Intermediate",
+    school: "Narayana Junior College",
+    period: "Jul 2020 — Jul 2022",
+    highlights: ["95.3%"],
   },
 ];
 
 export const experience: Experience[] = [
   {
-    role: "Frontend Engineer",
-    company: "Company Name",
-    period: "2025 — Present",
-    location: "Remote",
-    detail:
-      "One-line summary of your scope and impact. Lead with the outcome, then the how.",
+    role: "Graduate Engineer Trainee",
+    company: "Schneider Electric",
+    period: "Jan 2026 — Present",
     highlights: [
-      "Rebuilt the marketing site in Next.js, lifting Lighthouse performance from 54 to 98.",
-      "Introduced a token-based design system adopted by four product teams.",
-      "Mentored two junior engineers through their first production releases.",
+      "Developed backend services and microservices using C# and .NET, leveraging Azure cloud technologies and Docker, following Agile practices focused on scalability, reliability and seamless system integration.",
+      "Customised the Windchill backend platform with Java and developed the accompanying test cases.",
+      "Write and maintain unit, service-level and domain-level test cases to ensure code quality, stability and seamless integration.",
     ],
-    stack: ["Next.js", "TypeScript", "SCSS", "Framer Motion"],
+    stack: ["C#", ".NET", "Java", "Windchill", "Azure", "Docker"],
   },
   {
-    role: "Design Engineer Intern",
-    company: "Studio Name",
-    period: "Summer 2024",
-    location: "City, Country",
+    role: "Dataset Team Lead",
+    company: "Anantwave",
+    period: "Feb 2025 — Dec 2025",
     highlights: [
-      "Built 30+ reusable React components and the documentation site around them.",
-      "Prototyped motion studies for a client pitch that won the account.",
+      "Led the design and development of diverse quantum datasets for quantum machine learning, quantum algorithms and image processing tasks.",
     ],
-    stack: ["React", "GSAP", "Figma"],
+    stack: ["Quantum computing", "Machine learning", "Deep learning"],
   },
 ];
 
 export const projects: Project[] = [
   {
-    title: "Project One",
+    title: "SafeReach",
     summary:
-      "A short, confident description of the problem and what you built. Two sentences maximum — link out for the rest.",
-    tags: ["Next.js", "Postgres"],
+      "An emergency SOS escalation system with real-time alerts, live location sharing and emergency contact notifications. Delayed escalation workflows notify authorities if the user stays unresponsive within a defined safety window.",
+    tags: ["Node.js", "Next.js", "TypeScript", "MySQL", "Firebase"],
     year: "2025",
     featured: true,
-    href: "#",
-    repo: "#",
   },
   {
-    title: "Project Two",
+    title: "HomeTracker",
     summary:
-      "What makes this project interesting? Lead with the interesting constraint, the technique, or the result you are proud of.",
-    tags: ["TypeScript", "WebGL"],
+      "A full-stack web app for monitoring construction activity: worker data, material usage and cost tracking in one place.",
+    tags: ["HTML", "CSS", "JavaScript", "Node.js", "MySQL"],
     year: "2025",
-    href: "#",
-    repo: "#",
+    featured: true,
   },
   {
-    title: "Project Three",
+    title: "CogniClassify",
     summary:
-      "Keep the pattern consistent so the grid reads as one system. Cards should feel related at a glance.",
-    tags: ["Python", "FastAPI"],
-    year: "2024",
-    href: "#",
-  },
-  {
-    title: "Project Four",
-    summary:
-      "Four cards is a comfortable desktop row count. Add or remove freely — the grid adapts.",
-    tags: ["React", "Tailwind"],
-    year: "2024",
-    href: "#",
+      "A cognitive load classification system built on pre-recorded EEG data, using FFDNN models combining machine learning and deep learning for real-time detection.",
+    tags: ["Python", "Deep learning", "EEG"],
+    year: "2025",
+    featured: true,
   },
 ];
 
@@ -159,28 +143,39 @@ export const skillGroups: SkillGroup[] = [
   {
     label: "Languages",
     skills: [
-      { name: "TypeScript", level: 92 },
-      { name: "JavaScript", level: 95 },
-      { name: "Python", level: 78 },
-      { name: "HTML / CSS", level: 96 },
+      { name: "Java", level: 88 },
+      { name: "C# / .NET", level: 85 },
+      { name: "Python", level: 80 },
+      { name: "JavaScript", level: 85 },
+      { name: "HTML / CSS", level: 90 },
+      { name: "SQL", level: 85 },
     ],
   },
   {
-    label: "Frameworks",
+    label: "Frameworks & Cloud",
     skills: [
-      { name: "React / Next.js", level: 90 },
-      { name: "Three.js", level: 70 },
-      { name: "Node.js", level: 75 },
-      { name: "Blender", level: 62 },
+      { name: "ASP.NET", level: 84 },
+      { name: "React / Next.js", level: 82 },
+      { name: "Node.js", level: 80 },
+      { name: "Azure", level: 78 },
+      { name: "AWS", level: 74 },
+      { name: "MySQL / MongoDB", level: 82 },
     ],
   },
   {
-    label: "Craft",
+    label: "Tools",
     skills: [
-      { name: "Motion design", level: 82 },
-      { name: "Design systems", level: 86 },
-      { name: "Figma", level: 80 },
-      { name: "Technical writing", level: 74 },
+      { name: "Docker", level: 78 },
+      { name: "Git / GitHub", level: 88 },
+      { name: "Windchill (PLM)", level: 76 },
+      { name: "Visual Studio", level: 86 },
+      { name: "PowerShell", level: 74 },
     ],
   },
+];
+
+export const certificates: string[] = [
+  "AWS Certified Cloud Practitioner",
+  "MongoDB Associate Database Admin",
+  "Build Your Own Dynamic Web Application",
 ];

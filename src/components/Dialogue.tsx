@@ -54,6 +54,15 @@ export function Dialogue({ text, anchor, tail = "down", reducedMotion }: Dialogu
         {
           left: `${anchor.x}%`,
           top: `${anchor.y}%`,
+          /*
+            The pixel nudge, in the same order as the anchor: after the
+            percentages, so it is a correction on top of the placement rather
+            than another coordinate system competing with it. The global lift is
+            subtracted from the anchor's own dy, so a positive number always
+            means up regardless of which pose is speaking.
+          */
+          "--dx": `${anchor.dx ?? 0}px`,
+          "--dy": `${(anchor.dy ?? 0) - dialogueConfig.lift}px`,
           "--max-width": `${dialogueConfig.maxWidth}cqw`,
           "--enter": `${dialogueConfig.enterMs}ms`,
         } as React.CSSProperties

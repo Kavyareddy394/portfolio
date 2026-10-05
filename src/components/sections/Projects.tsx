@@ -11,7 +11,7 @@ export function Projects() {
           id="projects"
           eyebrow="Projects"
           title="Selected work."
-          subtitle="A few things worth talking about. Add, remove or reorder entries in lib/content.ts."
+          subtitle="Three things I built end to end, front to back."
         />
 
         <ul className={styles.grid}>

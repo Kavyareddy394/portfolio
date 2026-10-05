@@ -15,8 +15,8 @@ export function Contact() {
           </h2>
 
           <p className={styles.blurb}>
-            Open to freelance projects, contract work and full-time roles.
-            The fastest way to reach me is email.
+            Found something here worth talking about? The fastest way to reach me is
+            email.
           </p>
 
           <div className={styles.actions}>

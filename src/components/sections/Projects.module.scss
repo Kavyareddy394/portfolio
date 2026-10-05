@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  padding: var(--space-6);
+  padding: var(--space-5);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: linear-gradient(
@@ -111,6 +111,18 @@
   transform: translate(2px, -2px);
 }
 
+/*
+  Three equal columns, one per project.
+
+  The first card used to span two of them, which made one project twice the width of
+  the other two and left the third row slot empty. With exactly three projects there
+  is nothing to feature, so they are peers.
+
+  Stepped rather than switched: one column on a phone, two from 700px, three from
+  1060px. Cards are flex columns with the summary pushed to flex: 1, so the tag rows
+  and any links sit on the baseline across the row instead of floating mid card at
+  three different heights.
+*/
 @media (min-width: 700px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
@@ -120,9 +132,5 @@
 @media (min-width: 1060px) {
   .grid {
     grid-template-columns: repeat(3, 1fr);
-  }
-
-  .card:first-child {
-    grid-column: span 2;
   }
 }

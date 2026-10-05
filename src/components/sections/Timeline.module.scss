@@ -1,14 +1,44 @@
 /* Shared timeline layout for the Education and Experience sections. */
 
+/*
+  Vertical by default, which is what Education wants: its entries are a degree and a
+  college, both short, and side by side they read as a comparison table rather than a
+  timeline.
+*/
 .list {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
+/*
+  Experience opts into a row instead. The columns are deliberately unequal, 1.6fr to
+  1fr, and not by accident: the Schneider Electric role carries three bullets of real
+  detail and Anantwave carries one, so an even split would either pad the smaller card
+  out with air or clip the larger one.
+
+  The wide column goes to whichever entry is listed first, which is the longer one.
+  align-items: start so the short card does not stretch to match.
+
+  Collapses to one column below 760px: two boxes at phone width would be about 160px
+  each, narrower than a bullet point, forcing every line to break twice.
+*/
+.split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 760px) {
+  .split {
+    grid-template-columns: 1.6fr 1fr;
+    align-items: start;
+  }
+}
+
 .item {
   position: relative;
-  padding: var(--space-6);
+  padding: var(--space-5);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: linear-gradient(
@@ -71,7 +101,7 @@
 }
 
 .detail {
-  margin-top: var(--space-4);
+  margin-top: var(--space-3);
   color: var(--text-muted);
 }
 
@@ -79,7 +109,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  margin-top: var(--space-3);
 }
 
 .point {
@@ -118,6 +148,6 @@
 
 @media (min-width: 760px) {
   .item {
-    padding: var(--space-7);
+    padding: var(--space-6);
   }
 }

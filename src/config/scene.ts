@@ -229,13 +229,13 @@ export const sceneConfig = {
     deep: {
       startFrame: "p0_breathAUp",
       nextFrame: "p0_breathADown",
-      holdMs: 3400,
+      holdMs: 1400,
       fadeMs: 500,
     },
     light: {
       startFrame: "p1_sleepUp",
       nextFrame: "p1_sleepDown",
-      holdMs: 3800,
+      holdMs: 1800,
       fadeMs: 500,
     },
   },
@@ -313,14 +313,14 @@ export const sceneConfig = {
 
     /** Click during the loop: "I think I got an idea!". */
     reaction: {
-      halfLeanMs: 600,
+      halfLeanMs: 300,
       /** Full lean, alternating the two frames. */
-      fullLeanMs: 6000,
+      fullLeanMs: 3000,
       /** Back through the half lean on the way to the interrupted pose. */
-      halfLeanBackMs: 600,
-      fadeMs: 320,
+      halfLeanBackMs: 300,
+      fadeMs: 220,
       /** How long the bubble stays up. */
-      dialogueMs: 4000,
+      dialogueMs: 2000,
       dialogue: "I think I got an idea!",
     },
 
@@ -400,7 +400,7 @@ export const sceneConfig = {
       turnFadeMs: 200,
       turnMs: 700,
       /** Mouth frames, alternating for this long. */
-      talkMs: 3000,
+      talkMs: 2500,
       talkFrameMs: 250,
       /**
        * Just enough to hide the one pixel width difference between the two mouth
@@ -412,7 +412,7 @@ export const sceneConfig = {
       backFadeMs: 200,
       /** Crossfade from the angry turn back into typing. */
       returnFadeMs: 200,
-      dialogue: "Shh... I'm busy!",
+      dialogue: "Shh... I'm busy!\tDon't DISTURB",
     },
 
     /** The battery empties: a long, slow fade back to the sleeping frames. */

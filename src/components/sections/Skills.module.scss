@@ -4,14 +4,14 @@
 }
 
 .group {
-  padding: var(--space-6);
+  padding: var(--space-5);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
 }
 
 .groupLabel {
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-4);
   font-size: var(--text-sm);
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -22,7 +22,10 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  /* --space-3, not --space-5. Eighteen skills across three columns is the tallest
+     section on the page, and a 24px gap between every row pushed the bottom of it
+     past the fold on a laptop. */
+  gap: var(--space-3);
 }
 
 .row {
@@ -30,7 +33,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
 }
 
 .name {
@@ -81,7 +84,51 @@
   }
 }
 
-@media (min-width: 800px) {
+/* Certifications ---------------------------------------------------------- */
+
+.certs {
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.certsLabel {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.certsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.cert {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface-strong);
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+
+/*
+  Stepped, not switched: one column on a phone, two from 560px once a column can
+  hold a label like "Windchill (PLM)" without truncating, three from 900px.
+*/
+@media (min-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
   .grid {
     grid-template-columns: repeat(3, 1fr);
   }

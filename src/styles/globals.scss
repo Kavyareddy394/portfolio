@@ -58,7 +58,19 @@
   --space-9: 6rem;
   --space-10: 8rem;
 
-  --section-pad: clamp(5rem, 10vw, 9rem);
+  /*
+    Section padding, in one place so every section breathes the same amount.
+
+    It was clamp(5rem, 10vw, 9rem), which resolved to 144px top and bottom on a
+    laptop: 288px of nothing framing a section whose actual content was often
+    shorter than the frame. Every gap between sections on the page was at least that,
+    which is what made the whole thing feel like it was mostly margin.
+
+    This is roughly 80px on the same screen. Halving it is what lets a section and
+    its heading fit inside one viewport rather than spilling past the fold, and the
+    floor keeps a phone from collapsing the sections into each other.
+  */
+  --section-pad: clamp(3rem, 5.5vw, 5rem);
   --container: 1160px;
   --container-narrow: 760px;
   --nav-height: 72px;
@@ -194,6 +206,15 @@ p {
    Layout primitives
    ========================================================================== */
 
+/*
+  The page gutter, inside a centred column.
+
+  Reverted from full width deliberately. Running every section edge to edge on a
+  1920px screen left 590px project cards and a facts column stranded at the far right,
+  which read as a stretched dashboard rather than a portfolio. The centred column with
+  a generous max-width keeps the sections related to each other and to the hero, and
+  the line length stays where it was designed to be.
+*/
 .container {
   width: 100%;
   max-width: var(--container);
@@ -212,20 +233,35 @@ p {
   border-block: 1px solid var(--line);
 }
 
+/*
+  Three lines: label, title, description. Each one on a single line of its own.
+
+  This went through a one row flex version, which read as a cramped strip and lost the
+  hierarchy between a section name and its heading. Stacked is right; the fix for the
+  space it was eating is the type scale and the margins below, not the structure.
+
+  Each line is kept short enough to hold one line rather than wrapped. The title cap
+  is removed from the block so it gets the full column width, and only the
+  description keeps a 70ch measure, because that is the one piece of running prose in
+  the heading.
+*/
 .section__head {
-  max-width: var(--container-narrow);
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-5);
+}
+
+.section__head .eyebrow {
+  margin-bottom: var(--space-3);
 }
 
 .section__title {
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-2);
 }
 
 .section__subtitle {
-  margin-top: var(--space-4);
   color: var(--text-muted);
-  font-size: var(--text-lg);
-  max-width: 62ch;
+  font-size: var(--text-sm);
+  max-width: 70ch;
 }
 
 .eyebrow {

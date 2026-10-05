@@ -12,10 +12,24 @@
 
 import type { Phase } from "./scene";
 
-/** Where the bubble is pinned, as a percentage of the artwork from the top left. */
+/**
+ * Where the bubble is pinned.
+ *
+ * x and y are a percentage of the artwork from the top left, which is what keeps
+ * the bubble over her head on any screen shape. dx and dy are a pixel nudge
+ * applied after that, for the last few pixels of tuning.
+ *
+ * The nudge exists because a percentage cannot express "5px". A percent of the
+ * artboard is a different number of pixels on every screen: the board is about
+ * 1080px tall on a 1920 desktop and 422px on a stacked phone, so 5px is 0.46% in
+ * one case and 1.18% in the other. Anything measured in real pixels on the
+ * monitor in front of you belongs in dx and dy instead.
+ */
 export type Anchor = {
   x: number;
   y: number;
+  dx?: number;
+  dy?: number;
 };
 
 /** Which way the tail points, so it always aims at her head. */
@@ -30,31 +44,39 @@ export type Tail = "down" | "up" | "left" | "right";
  * bottom middle of the bubble, so the bubble sits on its anchor rather than above
  * it, and the tail bridges the last fraction of an em down onto her.
  *
- * The y values are lower than they used to be, which was the fix for the bubble
- * reading as too high. Anchoring on the crown of her head left the bubble in the
- * empty band above her; on a stacked phone that band is the strip above the nav
- * rather than anything worth spending the height on. Her sleeping head tops out at
- * about y 56, so 55 puts the bubble just above her, and the leaning poses sit
- * lower again. Verified with ?debug=1: the bubble's bottom edge measures y 55 on
- * every screen shape from 320x568 up to 1920x1080.
+ * The percentages place the tail on the crown of her head. The pixel nudges are
+ * the correction on top of that, and they are not all the same direction:
+ *
+ *   Sleeping sits a hair too high, so it comes down 5px. Her head is low in the
+ *   frame while she sleeps and there is nothing above it but empty night, so a
+ *   small nudge down is all that is wanted.
+ *
+ *   Thinking and coding sit ON her face, so they go up. The crown is level with
+ *   the bubble's bottom edge in those poses, which means the bubble body covers
+ *   the eyes and nose. Lifting it clear costs tens of pixels rather than a
+ *   couple, because the tail has to stay pointed at her head while the bubble
+ *   body climbs above the top of her skull.
  */
 export const dialogueAnchors = {
-  deepSleep: { x: 70, y: 55 },
-  lightSleep: { x: 70, y: 55 },
+  deepSleep: { x: 70, y: 55, dy: 5 },
+  lightSleep: { x: 70, y: 55, dy: 5 },
 
   /* Phase 2, chin and pen: upright, same as sleeping but awake. */
-  thinking: { x: 70, y: 55 },
-  /* Phase 2, half lean and full lean: her head has dropped and gone back. */
-  thinkingLeaning: { x: 67, y: 61 },
+  thinking: { x: 70, y: 55, dy: -46 },
+  /* Phase 2, half lean and full lean: her head has dropped and gone back, so the
+     crown is lower and the bubble only has to clear that much less. */
+  thinkingLeaning: { x: 67, y: 61, dy: -34 },
 
   /*
     Phase 3, the click reaction. She has turned round to face the viewer, and the
     typing frames put her head between x 62 and x 67, y 43 to y 57, measured off
     the difference between the lookdown and lookup pairs. Anchored inside that
     range rather than at the top of it, so the bubble sits beside her rather than
-    above her while the tail points up at her face.
+    above her while the tail points up at her face. She is facing the viewer here,
+    so there is no profile to tuck the bubble behind and it has to clear her head
+    entirely: the largest lift of the set.
   */
-  coding: { x: 64.5, y: 52 },
+  coding: { x: 64.5, y: 52, dy: -54 },
 } as const satisfies Record<string, Anchor>;
 
 export const dialogueTails = {
@@ -87,6 +109,18 @@ export const dialogueConfig = {
    * that parent is a zero sized anchor point and percentages resolve to zero.
    */
   maxWidth: 78,
+
+  /**
+   * Global lift, in pixels, applied to every bubble after its anchor.
+   *
+   * The per-anchor dy in dialogueAnchors is a correction between poses: one pose
+   * relative to the next. This is the trim they all share, so nudging the whole
+   * bubble up a few pixels does not mean editing five anchors and re-deriving them
+   * against each other afterwards.
+   *
+   * Subtracted rather than added, so a positive number always means up.
+   */
+  lift: 12,
 
   enterMs: 240,
   exitMs: 300,
@@ -135,5 +169,5 @@ export const dialogueLines: Record<Phase, readonly string[]> = {
     config/scene.ts, because she only ever says one thing when you interrupt her.
     This is here so the record covers every phase.
   */
-  coding: ["Shh... I'm busy!"],
+  coding: ["Shh... I'm busy!\nDon't DISTURB"],
 };

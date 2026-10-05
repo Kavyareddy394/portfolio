@@ -1,6 +1,6 @@
 import styles from "./Skills.module.scss";
 import { SectionHeading } from "@/components/SectionHeading";
-import { skillGroups } from "@/lib/content";
+import { certificates, skillGroups } from "@/lib/content";
 
 export function Skills() {
   return (
@@ -44,6 +44,25 @@ export function Skills() {
             </div>
           ))}
         </div>
+
+        {/*
+          Certifications sit inside Skills rather than in a section of their own:
+          they are three lines, and a whole nav entry for them would be more
+          navigation than content. Rendered as a flat list rather than bars, because
+          these are pass/fail, not a self-assessed level.
+        */}
+        {certificates.length > 0 ? (
+          <div className={styles.certs}>
+            <h3 className={styles.certsLabel}>Certifications</h3>
+            <ul className={styles.certsList}>
+              {certificates.map((certificate) => (
+                <li key={certificate} className={styles.cert}>
+                  {certificate}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
     </section>
   );

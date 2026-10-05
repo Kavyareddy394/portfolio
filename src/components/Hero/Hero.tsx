@@ -3,7 +3,7 @@
 import styles from "./Hero.module.scss";
 import { Scene } from "@/components/Scene/Scene";
 import { Battery } from "@/components/Battery/Battery";
-import { TerminalPlaceholder } from "@/components/TerminalPlaceholder/TerminalPlaceholder";
+import { Terminal } from "@/components/TerminalPlaceholder/TerminalPlaceholder";
 import { DebugOverlay } from "@/components/DebugOverlay";
 import { useSceneController } from "@/hooks/useSceneController";
 
@@ -31,9 +31,15 @@ export function Hero() {
         onActivate={() => scene.click()}
       />
 
-      <div className={`container ${styles.shell}`}>
+      {/*
+          Deliberately not .container. The hero opts out of the 1160px centred cap
+          and carries its own fluid gutter, so the terminal sits near the left edge
+          instead of stranded in the middle of the artwork. See .shell in
+          Hero.module.scss.
+        */}
+        <div className={styles.shell}>
         <div className={styles.content}>
-          <TerminalPlaceholder
+          <Terminal
             phaseLabel={scene.phaseLabel}
             battery={scene.battery}
             charging={scene.charging}

@@ -12,7 +12,7 @@
 .chrome {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--line);
   background: var(--surface);
@@ -39,10 +39,57 @@
   background: #28c840;
 }
 
+/*
+  The window title is a warning about her, not a label for the app.
+
+  Clicking anywhere on her wakes her, and she is asleep for the first two thirds of
+  the page, so the title is the joke: the thing everyone is about to do is the thing
+  the sign says not to. "she bites" is the punchline, and it is why the title is a
+  notch brighter than the rest of the chrome, which is the only thing that makes a
+  reader look up there before clicking.
+
+  One notch up in size from --text-xs, which is body-copy scale and too small to be
+  read as a sign. It still truncates rather than wrapping, because a two line title
+  bar pushes the whole log down.
+*/
 .title {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: var(--text-xs);
-  color: var(--text-faint);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/*
+  The finger at her.
+
+  It is rotated rather than swapped for a different emoji because she is not in the
+  same place on both layouts. The hero grid puts the scene above the panel once it
+  stacks, so on a phone she is overhead and the finger has to point up; on a wide
+  screen the panel is capped at 560px on the left of a 1160px container and she is
+  off to the right, so the finger points right.
+
+  rotate rather than translate, because the emoji is a single inline box: turning it
+  needs no layout shift and cannot reflow the title as the breakpoint crosses. It is
+  marked decorative and the title text says the same thing in words, so it is hidden
+  from assistive tech.
+*/
+.pointer {
+  display: inline-block;
+  flex: none;
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
+@media (max-width: 999px) {
+  .pointer {
+    /* Counter-clockwise a quarter turn: pointing up at her. */
+    rotate: -90deg;
+  }
 }
 
 .body {
@@ -97,6 +144,147 @@
   color: var(--text-faint);
 }
 
+/* Question log ----------------------------------------------------------- */
+
+/*
+  A fixed height box that scrolls.
+
+  Fixed, because the panel's height decides how much of the artwork the hero
+  covers: the grid gives the terminal row whatever is left over under the scene, so
+  a log that grew with every answer would push her head around on each question. A
+  min-height rather than none, so the first line does not collapse the box.
+*/
+.log {
+  min-height: 6.5em;
+  max-height: 14em;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: var(--space-2);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.log::-webkit-scrollbar {
+  width: 4px;
+}
+
+.log::-webkit-scrollbar-thumb {
+  border-radius: var(--radius-full);
+  background: var(--line-strong);
+}
+
+.entry {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.entry + .entry {
+  margin-top: var(--space-2);
+}
+
+/* Answers are offset under the prompt rather than starting at its column. */
+.entry[data-kind="reply"] .output {
+  display: block;
+  padding-left: 2ch;
+  color: var(--text);
+}
+
+.entry[data-kind="system"] .output {
+  display: block;
+  padding-left: 2ch;
+  color: var(--text-muted);
+}
+
+/* Prompt ----------------------------------------------------------------- */
+
+.form {
+  display: flex;
+  align-items: center;
+  gap: 0.35ch;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  caret-color: var(--accent);
+}
+
+.input:focus {
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+/*
+  Visible to screen readers only. The prompt glyphs are already spelled out by the
+  input's label, so labelling the visible "guest:~$" as well would announce the
+  shell decoration with every question.
+*/
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Suggestions ------------------------------------------------------------ */
+
+/*
+  One row of the questions worth asking, and the demonstration of what the matcher
+  handles: each chip is a sentence someone would type, not a field name.
+
+  overflow-x: auto with nowrap because there are six of them and they do not fit a
+  360px phone. Scrolling beats wrapping them onto three rows, which would double the
+  panel's height for no gain.
+*/
+.chips {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex: none;
+  padding: 0.3em 0.7em;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.chip:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+  background: var(--surface-strong);
+}
+
 @keyframes blink {
   0%,
   100% {
@@ -131,5 +319,25 @@
 
   .note {
     display: none;
+  }
+
+  /*
+    The log is the tallest thing in the panel and it is the thing that grows, so it
+    is cut down hardest here. It still holds an answer and a half before it starts
+    scrolling, because on a stacked phone the terminal is sharing the bottom band
+    with the charge bar and competing with the dialogue bubble for attention.
+  */
+  .log {
+    min-height: 4.5em;
+    max-height: 9em;
+  }
+
+  .form {
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+  }
+
+  .chips {
+    margin-top: var(--space-2);
   }
 }

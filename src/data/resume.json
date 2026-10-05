@@ -1,0 +1,112 @@
+{
+  "basics": {
+    "name": "Kavya Ramatatagari",
+    "role": "Software Developer",
+    "tagline": "Full-stack, microservices and AI/ML.",
+    "location": "Bangalore, India",
+    "email": "kavya394113@gmail.com",
+    "phone": "+91-8985270016",
+    "summary": "I build across the stack: React, Next.js and Node on the front, C# and .NET microservices on Azure at Schneider Electric, Java for backend platform work. AI/ML is what I'm curious about next — EEG-based cognitive load classification and quantum datasets both taught me the data matters more than the model. I care about tests that catch real problems and services that stay up."
+  },
+  "skills": [
+    {
+      "group": "Languages",
+      "items": ["Java", "C#", ".NET", "Python", "JavaScript", "HTML", "CSS", "SQL"]
+    },
+    {
+      "group": "Frameworks & Libraries",
+      "items": ["ASP.NET", "React", "Next.js", "Node.js", "Windchill"]
+    },
+    {
+      "group": "Cloud & Databases",
+      "items": ["Azure", "AWS", "MySQL", "MongoDB"]
+    },
+    {
+      "group": "Developer Tools",
+      "items": ["Docker", "Git", "GitHub", "Visual Studio", "VS Code", "PowerShell"]
+    },
+    {
+      "group": "Core Subjects",
+      "items": ["OOP", "DSA", "DBMS", "Operating Systems", "Computer Networks", "DAA"]
+    }
+  ],
+  "experience": [
+    {
+      "company": "Schneider Electric",
+      "role": "Graduate Engineer Trainee",
+      "start": "Jan 2026",
+      "end": "Present",
+      "summary": "Backend services and microservices in C# and .NET, on Azure and Docker.",
+      "highlights": [
+        "Developed backend services and microservices with C# and .NET, leveraging Azure cloud technologies and Docker, following Agile practices with a focus on scalability, reliability and seamless system integration.",
+        "Customised the Windchill backend platform with Java and developed the accompanying test cases.",
+        "Write and maintain unit, service-level and domain-level test cases to ensure code quality, stability and seamless integration."
+      ],
+      "stack": ["C#", ".NET", "Java", "Azure", "Docker", "Windchill"]
+    },
+    {
+      "company": "Anantwave",
+      "role": "Dataset Team Lead",
+      "start": "Feb 2025",
+      "end": "Dec 2025",
+      "summary": "Led the design and development of quantum datasets.",
+      "highlights": [
+        "Led the design and development of diverse quantum datasets for quantum machine learning, quantum algorithms and image processing tasks."
+      ],
+      "stack": ["Quantum computing", "Machine learning", "Deep learning"]
+    }
+  ],
+  "projects": [
+    {
+      "name": "SafeReach",
+      "description": "Emergency SOS escalation system with real-time alerts, live location sharing and delayed escalation to authorities if the user stays unresponsive.",
+      "stack": ["Node.js", "Next.js", "TypeScript", "MySQL", "Firebase"],
+      "url": "",
+      "repo": ""
+    },
+    {
+      "name": "HomeTracker",
+      "description": "Full-stack construction management system tracking worker data, material usage and costs.",
+      "stack": ["HTML", "CSS", "JavaScript", "Node.js", "MySQL"],
+      "url": "",
+      "repo": ""
+    },
+    {
+      "name": "CogniClassify",
+      "description": "Cognitive load classification from pre-recorded EEG data, using FFDNN models combining machine learning and deep learning for real-time detection.",
+      "stack": ["Python", "Deep learning", "EEG"],
+      "url": "",
+      "repo": ""
+    }
+  ],
+  "education": [
+    {
+      "school": "VIT AP University",
+      "degree": "B.Tech",
+      "field": "Computer Science and Engineering",
+      "start": "Sep 2022",
+      "end": "Present",
+      "notes": "CGPA 9.47"
+    },
+    {
+      "school": "Narayana Junior College",
+      "degree": "Intermediate",
+      "field": "",
+      "start": "Jul 2020",
+      "end": "Jul 2022",
+      "notes": "95.3%"
+    }
+  ],
+  "certificates": [
+    "AWS Certified Cloud Practitioner",
+    "MongoDB Associate Database Admin",
+    "Build Your Own Dynamic Web Application"
+  ],
+  "socials": [
+    {
+      "label": "LinkedIn",
+      "handle": "kavyaramatatagari",
+      "url": "https://linkedin.com/in/kavyaramatatagari"
+    }
+  ]
+}

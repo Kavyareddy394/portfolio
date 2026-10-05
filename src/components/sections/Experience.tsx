@@ -13,7 +13,10 @@ export function Experience() {
           subtitle="Outcomes first — the mechanism is the footnote."
         />
 
-        <ol className={styles.list}>
+        {/* Split rather than stacked: the two roles are read side by side, and the wider
+            column is sized to the one with more to say. Education keeps the plain
+            vertical list. */}
+        <ol className={`${styles.list} ${styles.split}`}>
           {experience.map((item) => (
             <li key={item.role} className={styles.item}>
               <div className={styles.top}>
@@ -25,8 +28,6 @@ export function Experience() {
                 {item.company}
                 {item.location ? ` · ${item.location}` : ""}
               </p>
-
-              {item.detail ? <p className={styles.detail}>{item.detail}</p> : null}
 
               {item.highlights?.length ? (
                 <ul className={styles.points}>

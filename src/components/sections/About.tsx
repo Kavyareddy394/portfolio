@@ -4,7 +4,7 @@ import { about } from "@/lib/content";
 
 export function About() {
   return (
-    <section id="about" className={`section ${styles.about}`}>
+    <section id="about" className="section">
       <div className="container">
         <SectionHeading
           id="about"

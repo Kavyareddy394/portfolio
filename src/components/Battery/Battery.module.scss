@@ -19,6 +19,7 @@
 }
 
 .percent {
+  flex: none;
   font-family: var(--font-display);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
@@ -94,17 +95,34 @@
   goes and only the track survives.
 */
 @media (max-width: 999px) and (min-height: 480px) {
-  .battery {
-    flex-direction: row;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-4);
-  }
+.battery {
+  flex-direction: row;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  /* A flex child will not shrink below its content unless it says so, and this is
+     the row the bar overflows inside. */
+  min-width: 0;
+}
 
   .track {
-    width: 100%;
+    /*
+      flex: 1 with width: auto, not width: 100%.
+
+      The track used to be width: 100% and flex: none, which asked for a bar as
+      wide as the whole panel and then added the percentage, the gap and the
+      padding on top of it. The row came out wider than its container, so the fill
+      ran off the right edge of the panel and past the rounded corner with it.
+
+      Letting flex size it means the bar takes whatever the number and the padding
+      leave over, which is the whole point of a gauge in a row. min-width: 0 lets it
+      actually get that narrow on a small screen instead of refusing to shrink below
+      its content.
+    */
+    flex: 1;
+    width: auto;
     height: 6px;
+    min-width: 0;
     min-height: 0;
-    flex: none;
   }
 
   .fill {

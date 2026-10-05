@@ -65,9 +65,6 @@ export function Navbar() {
         </nav>
 
         <div className={styles.actions}>
-          <a className={styles.cta} href={`mailto:${site.email}`}>
-            Hire me
-          </a>
           <button
             className={styles.toggle}
             type="button"
@@ -106,13 +103,6 @@ export function Navbar() {
             </li>
           ))}
         </ul>
-        <a
-          className={`btn btn--primary ${styles.menuCta}`}
-          href={`mailto:${site.email}`}
-          onClick={() => setMenuOpen(false)}
-        >
-          Hire me
-        </a>
       </div>
     </header>
   );

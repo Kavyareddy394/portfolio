@@ -16,20 +16,33 @@
   border-bottom-color: var(--line);
 }
 
+/*
+  Full bleed, brand hard left and links dead centre.
+
+  This used to carry the same max-width: var(--container) cap as the sections below,
+  which centred a 1160px row inside a 1920px laptop and left about 380px of nothing
+  on each side. The cap belongs to the content sections, not to the chrome: a nav is
+  furniture, and furniture spans the room.
+
+  Three equal columns rather than space-between, so the link pill stays optically
+  centred instead of drifting right of true whenever the brand and the toggle are
+  different widths. It costs nothing when the links are hidden on a phone, because an
+  absent middle column collapses to zero and the two ends fall back to the edges.
+*/
 .bar {
   height: var(--nav-height);
-  max-width: var(--container);
-  margin-inline: auto;
-  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-5);
+  column-gap: var(--space-5);
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
 }
 
 /* Brand ------------------------------------------------------------------ */
 
 .brand {
+  grid-column: 1;
+  justify-self: start;
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -70,6 +83,8 @@
 /* Desktop links ---------------------------------------------------------- */
 
 .links {
+  grid-column: 2;
+  justify-self: center;
   display: none;
   align-items: center;
   gap: var(--space-1);
@@ -112,28 +127,17 @@
   transform: translateX(-50%);
 }
 
-/* Actions ---------------------------------------------------------------- */
-
+/*
+  No CTA here on purpose. This is a showcase of work, not a hiring page, so there
+  is nothing to pitch and nothing to hire for. The address lives in the contact
+  section and in the terminal instead, where someone has already asked for it.
+*/
 .actions {
+  grid-column: 3;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: var(--space-3);
-}
-
-.cta {
-  display: none;
-  padding: 0.55rem 1.15rem;
-  border-radius: var(--radius-full);
-  background: var(--gradient);
-  color: #06070b;
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  transition: transform var(--dur-fast) var(--ease-out);
-}
-
-.cta:hover {
-  transform: translateY(-2px);
 }
 
 .toggle {
@@ -175,16 +179,38 @@
 
 /* Mobile menu ------------------------------------------------------------ */
 
+/*
+  A panel that drops out of the bar, not a takeover of the screen.
+
+  It used to be inset to the bottom of the viewport with space-between on the
+  column, which pushed the list to the top and the CTA to the bottom of a phone
+  screen with a hand's width of nothing between them. With seven sections at the
+  old type size that column was also taller than the viewport, and there was no
+  scroll, so the last items and the CTA were simply unreachable.
+
+  So the panel is sized to its content and clipped to whatever is left below the
+  bar, scrolling when it has to. inset is a top offset with auto height, so the
+  box ends where the content ends rather than at the bottom of the screen.
+*/
 .menu {
   position: fixed;
-  inset: var(--nav-height) 0 0;
+  inset: var(--nav-height) 0 auto;
+  max-height: calc(100dvh - var(--nav-height));
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: var(--space-6);
-  padding: var(--space-7) clamp(1.25rem, 4vw, 2.5rem) var(--space-8);
-  background: rgba(6, 7, 11, 0.96);
-  backdrop-filter: blur(20px);
+  gap: var(--space-4);
+  padding: var(--space-4) clamp(1.25rem, 4vw, 2.5rem) var(--space-5);
+  overflow-y: auto;
+  /* Scrolling the menu must not drag the page behind it. */
+  overscroll-behavior: contain;
+  /*
+    Opaque enough to read the type against. The artwork behind is a night scene
+    with lamplight in it, and a translucent panel put the brightest of that
+    straight through the words.
+  */
+  background: rgba(6, 7, 11, 0.94);
+  backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--line);
   animation: menu-in var(--dur-base) var(--ease-out);
 }
 
@@ -203,30 +229,51 @@
   animation: item-in var(--dur-base) var(--ease-out) forwards;
 }
 
+.menuList li:last-child {
+  border-bottom: 0;
+}
+
+/*
+  --text-lg rather than --text-xl. The old size was tuned as a page heading; as a
+  list of seven links it made the panel taller than a phone, and it read as seven
+  headlines rather than seven places you can go.
+
+  The padding is pulled in for the same reason, and the negative margin plus inset
+  padding keeps the hover and active backgrounds out to the gutter so the hit area
+  is the full row while the separator still runs the width of the panel.
+*/
 .menuLink {
   display: flex;
   align-items: baseline;
-  gap: var(--space-4);
-  padding: var(--space-4) 0;
+  gap: var(--space-3);
+  margin-inline: calc(-1 * var(--space-3));
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 500;
+  line-height: 1.3;
   color: var(--text-muted);
-  transition: color var(--dur-fast) var(--ease-out);
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.menuLink:hover {
+  color: var(--text);
+  background: var(--surface);
 }
 
 .menuLink[data-active="true"] {
   color: var(--text);
+  background: var(--surface-strong);
 }
 
 .menuIndex {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
   color: var(--text-faint);
-}
-
-.menuCta {
-  align-self: flex-start;
 }
 
 @keyframes menu-in {
@@ -254,8 +301,7 @@
 /* Breakpoints ------------------------------------------------------------ */
 
 @media (min-width: 900px) {
-  .links,
-  .cta {
+  .links {
     display: flex;
   }
 

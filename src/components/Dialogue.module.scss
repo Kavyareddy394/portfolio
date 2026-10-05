@@ -12,6 +12,16 @@
   z-index: 6;
   width: 0;
   height: 0;
+  /*
+    The pixel nudge from config/dialogue.ts, applied here rather than on the bubble
+    so the tail travels with it and the tip keeps landing on the same point.
+
+    It sits on .layer, which is the zero sized anchor point: the bubble and the
+    tail both position themselves against this box, so moving the box moves the
+    whole bubble by a fixed number of screen pixels on every screen shape, which
+    percentages of the artboard cannot do.
+  */
+  translate: var(--dx, 0px) var(--dy, 0px);
   /* Never intercepts a click aimed at her. */
   pointer-events: none;
 }
